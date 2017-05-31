@@ -110,13 +110,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleshipGameAlgoSmart.h" />
     <ClInclude Include="BattleshipGameAlgo.h" />
     <ClInclude Include="IBattleshipGameAlgo.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleshipGameAlgoSmart.cpp" />
     <ClCompile Include="BattleshipGameAlgo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.vcxproj">
+      <Project>{eeb0d4ce-5e7a-47db-baf6-f3a4581b16a6}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
