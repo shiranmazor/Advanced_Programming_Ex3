@@ -21,9 +21,15 @@
     <ClInclude Include="BattleshipGameAlgo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleshipGameAlgoSmart.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BattleshipGameAlgo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleshipGameAlgoSmart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

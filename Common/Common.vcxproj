@@ -110,7 +110,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleBoard.h" />
+    <ClInclude Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\Common.h" />
     <ClInclude Include="IBattleshipGameAlgo.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleBoard.cpp" />
+    <ClCompile Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\Common.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

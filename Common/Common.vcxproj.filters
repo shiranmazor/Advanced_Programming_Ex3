@@ -18,5 +18,19 @@
     <ClInclude Include="IBattleshipGameAlgo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleBoard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\Common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Advanced_Programming_Ex2\BattleshipGame_Ex2\BattleBoard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
