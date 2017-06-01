@@ -1,1 +1,72 @@
 #pragma once
+#include "IBattleshipGameAlgo.h"
+#include <iostream>
+#include <string>
+#include <direct.h>
+#include <vector>
+#include <windows.h>
+#include <stdio.h>
+#include "time.h"
+#include "Common.h"
+#include "BattleBoard.h"
+#include <algorithm>
+#include <tuple>
+#include <windows.h>
+
+using namespace std;
+
+#define GREEN 10
+#define RED 12
+#define BLUE 9
+#define PURPLE  13
+#define YELLOW 14
+#define WHITE 15
+#define HitMarkA '*'
+#define HitMarkB '#'
+#define isPlayerA(y)  (isupper(y) || y == HitMarkA)
+
+// define function of the type we expect
+typedef IBattleshipGameAlgo *(*GetAlgorithmFuncType)();
+
+class GamesResult
+{
+public:
+	vector<int> gamesCounter;
+	vector<string> teamNames;
+	GamesResult()
+	{
+
+	}
+	// destructor
+	~GamesResult()
+	{
+
+	}
+	
+};
+
+/*
+* check if the files below exist in the given path:
+* one sboard file and 2 dll files
+* if not return false
+*/
+bool CheckExistingDlls(vector<string> dllFiles, string path, vector<string>& error_messages);
+void closeDLLs(vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>> & dll_vec);
+bool dirExists(const std::string& dirName_in);
+void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles);
+
+/*
+load algorithms and board file for one game
+*/
+bool loadAlgoDllAndInitGame(string folder, vector<string> dllfiles, vector<string> sboardfiles, BoardData* mainBoard,
+	tuple<IBattleshipGameAlgo*, IBattleshipGameAlgo*>& players, vector<HINSTANCE>& dllLoaded);
+
+IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
+	IBattleshipGameAlgo* pB, int currentName);
+
+/*
+call load dll and init game 
+create players
+create boardgame instace and check validity of the board
+*/
+int PlaySingleGame(string path, vector<string> gameFiles);
