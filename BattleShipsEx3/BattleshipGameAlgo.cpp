@@ -8,6 +8,11 @@ IBattleshipGameAlgo* GetAlgorithm()
 	return new BattleshipGameAlgo();
 }
 
+void BattleshipGameAlgo::setPlayer(int player)
+{
+	
+}
+
 /*
 bool BattleshipGameAlgo::_canAttack(int i, int j) const
 {

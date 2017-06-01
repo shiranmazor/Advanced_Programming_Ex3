@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "IBattleshipGameAlgo.h"
 #include <iostream>
 #include <string>
@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <tuple>
 #include <windows.h>
+#include "BattleBoard.h"
 
 using namespace std;
 
@@ -27,6 +28,18 @@ using namespace std;
 // define function of the type we expect
 typedef IBattleshipGameAlgo *(*GetAlgorithmFuncType)();
 
+class GameResult
+{
+public:
+	string playerA;
+	string playerB;
+	int playerAScore;
+	int playerBScore;
+	string winPlayer;
+	GameResult(string playerA, string playerB):playerAScore(0),playerBScore(0)
+	{}
+
+};
 class PlayerBalance
 {
 public:
@@ -58,8 +71,8 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 /*
 load algorithms and board file for one game
 */
-bool loadAlgoDllsCheckBoards(string folder, vector<string> dllfiles, vector<string> sboardfiles, BoardData* mainBoard,
-	tuple<IBattleshipGameAlgo*, IBattleshipGameAlgo*>& players, vector<HINSTANCE>& dllLoaded);
+bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
+	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards);
 void CalcCompetitionGames();
 
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
@@ -70,5 +83,6 @@ call load dll and init game
 create players
 create boardgame instace and check validity of the board
 */
-int PlaySingleGame(string path, vector<string> gameFiles);
+unique_ptr<GameResult> playSingleGame(pair<string, string> dllNames, GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
+	shared_ptr<BattleBoard> board);
 int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads);

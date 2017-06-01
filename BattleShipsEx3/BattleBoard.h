@@ -134,6 +134,7 @@ public:
 	bool isBoardValid(vector<string>& error_messages);
 	pair<int, int> CalcScore();
 	int CheckVictory();
-	void getPlayerBoard(Player player, char** &pBoard) const;
-	AttackResult performGameMove(int p, pair<int, int> move);
+	BattleBoard BattleBoard::getPlayerBoard(Player player) const;
+	AttackResult performGameMove(int p, Coordinate move);
+	virtual char charAt(Coordinate c) const  override;
 };

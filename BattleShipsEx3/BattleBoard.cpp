@@ -176,7 +176,12 @@ int BattleBoard::CheckVictory()
 	return winner;
 }
 
-void BattleBoard::getPlayerBoard(Player player, char** &pBoard) const
+char BattleBoard::charAt(Coordinate c) const
+{
+	return 'a';
+}
+
+BattleBoard BattleBoard::getPlayerBoard(Player player) const
 {
 	/*
 	pBoard = new char*[this->R];
@@ -198,19 +203,24 @@ void BattleBoard::getPlayerBoard(Player player, char** &pBoard) const
 	
 }
 
-AttackResult BattleBoard::performGameMove(int p, pair<int, int> move)
+AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 {
-	pair<int, int> boardMove = make_pair(move.first - 1, move.second - 1);
+	/*
+	*
+	*pair<int, int> boardMove = make_pair(move.first - 1, move.second - 1);
 	char c = this->board[boardMove.first][boardMove.second];
 	if (!isspace(c)) {
-		if (isAlreadyHit(c)) {
-			return (this->ships[makeKey(boardMove)]->hitNum == this->ships[makeKey(boardMove)]->size) ? AttackResult::Miss : AttackResult::Hit;
-		}
-		if (isupper(c) || islower(c)) {
-			this->board[boardMove.first][boardMove.second] = isupper(c) ? HitMarkA : HitMarkB;
-			this->ships[makeKey(boardMove)]->hitNum++;
-			return (this->ships[makeKey(boardMove)]->hitNum == this->ships[makeKey(boardMove)]->size) ? AttackResult::Sink : AttackResult::Hit;
-		}
+	if (isAlreadyHit(c)) {
+	return (this->ships[makeKey(boardMove)]->hitNum == this->ships[makeKey(boardMove)]->size) ? AttackResult::Miss : AttackResult::Hit;
 	}
+	if (isupper(c) || islower(c)) {
+	this->board[boardMove.first][boardMove.second] = isupper(c) ? HitMarkA : HitMarkB;
+	this->ships[makeKey(boardMove)]->hitNum++;
+	return (this->ships[makeKey(boardMove)]->hitNum == this->ships[makeKey(boardMove)]->size) ? AttackResult::Sink : AttackResult::Hit;
+	}
+	}
+	*/
+
 	return AttackResult::Miss;
 }
+
