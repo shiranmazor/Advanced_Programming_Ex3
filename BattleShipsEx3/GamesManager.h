@@ -37,6 +37,7 @@ public:
 	int gamesCounter;
 	int pointsGained;
 	int pointsAgainst;
+
 	PlayerBalance(string name) :wins(0), losses(0), winsRate(0), gamesCounter(0), pointsGained(0), pointsAgainst(0)
 	{
 		this->playerName = name;
@@ -50,16 +51,16 @@ public:
 * one sboard file and 2 dll files
 * if not return false
 */
-bool CheckExistingDlls(vector<string> dllFiles, string path, vector<string>& error_messages);
+bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path, vector<string>& error_messages);
 void closeDLLs(vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>> & dll_vec);
-bool dirExists(const std::string& dirName_in);
 void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles);
 
 /*
 load algorithms and board file for one game
 */
-bool loadAlgoDllAndInitGame(string folder, vector<string> dllfiles, vector<string> sboardfiles, BoardData* mainBoard,
+bool loadAlgoDllsCheckBoards(string folder, vector<string> dllfiles, vector<string> sboardfiles, BoardData* mainBoard,
 	tuple<IBattleshipGameAlgo*, IBattleshipGameAlgo*>& players, vector<HINSTANCE>& dllLoaded);
+void CalcCompetitionGames();
 
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
 	IBattleshipGameAlgo* pB, int currentName);
@@ -70,3 +71,4 @@ create players
 create boardgame instace and check validity of the board
 */
 int PlaySingleGame(string path, vector<string> gameFiles);
+int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads);

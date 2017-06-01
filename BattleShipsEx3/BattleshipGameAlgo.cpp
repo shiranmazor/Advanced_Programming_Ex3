@@ -5,7 +5,7 @@
 
 IBattleshipGameAlgo* GetAlgorithm()
 {
-	return NULL;
+	return new BattleshipGameAlgo();
 }
 
 /*
