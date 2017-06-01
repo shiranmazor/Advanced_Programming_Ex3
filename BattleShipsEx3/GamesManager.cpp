@@ -124,11 +124,26 @@ int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads
 	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
 		return -1;
 
+	//create game combinations
+	//first create a map of player unique number to algo name
+	map<int, GetAlgorithmFuncType> playersAlgo;
+	int i = 0;
+	for(auto algo : algorithmFuncs)
+	{
+		playersAlgo.insert(make_pair(i, algo));
+		i++;
+	}
+		
+
 	//finish manage games release dlls
 	closeDLLs(dllLoaded);
 
 }
 
+void getGameCombinations(map<int, GetAlgorithmFuncType> playersAlgo, vector<shared_ptr<BattleBoard>> boards)
+{
+	
+}
 /*
  *algorithmFuncs c
  */
