@@ -3,7 +3,6 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include "IBattleshipGameAlgo.h"
 #include "BattleBoard.h"
 #include "Common.h"
 
@@ -25,7 +24,7 @@ class BattleshipGameAlgo : public IBattleshipGameAlgo
 {
 public:
 	int playerNum;
-	BattleBoard* playerBoard = nullptr;
+	//BattleBoard* playerBoard = nullptr;
 	targetVessel* target = nullptr;
 	int hostileShipsNum = -1;
 
@@ -40,14 +39,15 @@ public:
 
 	~BattleshipGameAlgo()
 	{
-		delete playerBoard;
+		//delete playerBoard;
 		delete target;
 	}
 
-	virtual void setBoard(int player, const char** board, int numRows, int numCols) override;
-	virtual bool init(const std::string& path) override;
-	virtual pair<int, int> attack() override;
-	virtual void notifyOnAttackResult(int player, int row, int col, AttackResult result) override;
+	virtual void setPlayer(int player) override;
+	virtual void setBoard(const BoardData& board) override;
+	//virtual bool init(const std::string& path) override;
+	virtual  Coordinate attack() override;
+	virtual void notifyOnAttackResult(int player, Coordinate move, AttackResult result)  override;
 
 private:
 	void _markIrrelevant(int i, int j) const;

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include "time.h"
 #include "Common.h"
-#include "BattleBoard.h"
 #include <algorithm>
 #include <tuple>
 #include <windows.h>
@@ -28,22 +27,23 @@ using namespace std;
 // define function of the type we expect
 typedef IBattleshipGameAlgo *(*GetAlgorithmFuncType)();
 
-class GamesResult
+class PlayerBalance
 {
 public:
-	vector<int> gamesCounter;
-	vector<string> teamNames;
-	GamesResult()
+	string playerName;
+	int wins;
+	int losses;
+	float winsRate;
+	int gamesCounter;
+	int pointsGained;
+	int pointsAgainst;
+	PlayerBalance(string name) :wins(0), losses(0), winsRate(0), gamesCounter(0), pointsGained(0), pointsAgainst(0)
 	{
-
+		this->playerName = name;
 	}
-	// destructor
-	~GamesResult()
-	{
-
-	}
-	
+	~PlayerBalance() = default;
 };
+
 
 /*
 * check if the files below exist in the given path:

@@ -18,6 +18,15 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\BattleShipsEx3\BattleBoard.cpp" />
+    <ClCompile Include="..\BattleShipsEx3\Common.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\BattleShipsEx3\BattleBoard.h" />
+    <ClInclude Include="..\BattleShipsEx3\Common.h" />
+    <ClInclude Include="..\BattleShipsEx3\IBattleshipGameAlgo.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EEB0D4CE-5E7A-47DB-BAF6-F3A4581B16A6}</ProjectGuid>
     <RootNamespace>Common</RootNamespace>
@@ -44,11 +53,11 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -109,15 +118,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="BattleBoard.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="IBattleshipGameAlgo.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="BattleBoard.cpp" />
-    <ClCompile Include="Common.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

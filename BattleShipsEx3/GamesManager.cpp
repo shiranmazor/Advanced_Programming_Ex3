@@ -102,12 +102,12 @@ bool loadAlgoDllAndInitGame(string folder, vector<string> dllfiles, vector<strin
 	return true;
 }
 /*
-arguments: path [optional] -threads[optional]
+arguments: path [optional] -threads <num> [optional]
 in main we get arguments, get dll and sboard files, calc number of games and then runs the gamesManager
 */
 int main(int argc, char **argv)
 {
-	string path; int threads;
+	string path; int threads = 4;
 	vector<string> error_messages;
 	vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>>  dll_vec;
 	char the_path[256];
