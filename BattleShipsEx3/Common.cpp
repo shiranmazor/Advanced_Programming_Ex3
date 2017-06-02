@@ -58,6 +58,11 @@ bool isCharValid(char C)
 	return tolower(C) == 'b' || tolower(C) == 'p' || tolower(C) == 'm' || tolower(C) == 'd';
 }
 
+Coordinate fitCoordinate(Coordinate coor)
+{
+	return Coordinate(coor.row - 1, coor.col - 1, coor.depth - 1);
+}
+
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
 	IBattleshipGameAlgo* pB, int currentName)
 {

@@ -30,6 +30,7 @@ map<string, string> getConfigParams(string path);
 int getShipSize(char C);
 int getShipScore(char C);
 bool isCharValid(char C);
+Coordinate fitCoordinate(Coordinate coor);
 
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
 	IBattleshipGameAlgo* pB, int currentName);

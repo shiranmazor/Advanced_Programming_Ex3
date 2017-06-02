@@ -14,12 +14,12 @@
 
 using namespace std;
 
-#define isPlayerChar(x, y) (x==A && (isupper(y) || isspace(y)) || (x==B && (islower(y) || isspace(y))))
+#define	isPlayerChar(x, y) (x==A && (isupper(y) || isspace(y)) || (x==B && (islower(y) || isspace(y))))
 #define isSelfHit(x, y) (x==A && y == HitMarkA) || (x==B && y == HitMarkB))
 #define isOppChar(x, y) ((x==A && islower(y)) || (x==B && isupper(y)))
 #define HitMarkA '*'
 #define HitMarkB '#'
-#define makeKey(x) (std::to_string(x.first) + '_' + std::to_string(x.second))
+#define makeKey(x) (std::to_string(x.row) + '_' + std::to_string(x.col) + '_' + std::to_string(x.depth))
 #define isAlreadyHit(x) (x == '*' || x == '#')
 
 const char idx2ship[8] = { 'B', 'P', 'M', 'D', 'b', 'p', 'm', 'd' };
@@ -54,11 +54,11 @@ public:
 	unordered_map<string, Vessel*> ships;
 
 	// Blocking Copy and Assignment
-	BattleBoard(const BattleBoard&) = delete;
+	//BattleBoard(const BattleBoard&) = delete;
 	BattleBoard& operator = (const BattleBoard&) = delete;
 
 	// constructor
-	BattleBoard(string boardFilePath)
+	BattleBoard(string boardFilePath) : playerToolsNum(0)
 	{
 		ifstream boardFile(boardFilePath); //here assuming board file exist!
 		string line;
@@ -100,25 +100,14 @@ public:
 		for (int z = 0; z < this->_depth; z++)
 			for (int i = 0; i < this->_rows; i++)
 				for (int j = 0; j < this->_cols; j++)
-					if (!isCharValid(this->board[i][j][z])) this->board[i][j][z] = ' ';
+					if (!isCharValid(this->board[z][i][j])) this->board[z][i][j] = ' ';
 	}
 
-	BattleBoard(const char** initBoard, int R = 10, int C = 10) :playerToolsNum(5)
+	BattleBoard(const BattleBoard& b) : board(b.board), playerToolsNum(b.playerToolsNum), ships(b.ships)
 	{
-		/*
-		this->R = R;
-		this->C = C;
-
-		// copy the init board to  new board member
-		this->board = new char*[this->R];
-		for (int i = 0; i < this->R; i++) this->board[i] = new char[this->C];
-
-		for (int i = 0; i < this->R; i++)
-		{
-		this->board[i] = _strdup(initBoard[i]);
-		}
-		*/
-		
+		this->_cols = b.cols();
+		this->_rows = b.rows();
+		this->_depth = b.depth();
 	}
 
 	// destructor

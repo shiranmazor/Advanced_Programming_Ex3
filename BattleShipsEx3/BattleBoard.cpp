@@ -178,49 +178,40 @@ int BattleBoard::CheckVictory()
 
 char BattleBoard::charAt(Coordinate c) const
 {
-	return 'a';
+	c = fitCoordinate(c);
+	return this->board[c.depth][c.row][c.col];
 }
 
 BattleBoard BattleBoard::getPlayerBoard(Player player) const
 {
-	/*
-	pBoard = new char*[this->R];
-	for (int i = 0; i < this->C; i++)
-	pBoard[i] = new char[this->C];
+	BattleBoard pBoard(*this);
+	pBoard.ships = {};
 
-	for (int i = 0; i < this->R; i++)
-	{
-	for (int j = 0; j < this->C; j++)
-	{
-	if (isPlayerChar(player, this->board[i][j]))
-	pBoard[i][j] = this->board[i][j];
-	else
-	pBoard[i][j] = ' ';
-	}
-	}
+	for (int z = 0; z < pBoard.depth(); z++)
+		for (int i = 0; i < pBoard.rows(); i++)
+			for (int j = 0; j < pBoard.cols(); j++)
+				if (!isPlayerChar(player, pBoard.board[z][i][j])) pBoard.board[z][i][j] = ' ';
 
-	*/
-	
+	return pBoard;
 }
 
 AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 {
-	/*
-	*
-	*pair<int, int> boardMove = make_pair(move.first - 1, move.second - 1);
-	char c = this->board[boardMove.first][boardMove.second];
-	if (!isspace(c)) {
-	if (isAlreadyHit(c)) {
-	return (this->ships[makeKey(boardMove)]->hitNum == this->ships[makeKey(boardMove)]->size) ? AttackResult::Miss : AttackResult::Hit;
+	char c = this->charAt(move);
+	move = fitCoordinate(move);
+	if (!isspace(c)) 
+	{
+		if (isAlreadyHit(c)) 
+		{
+			return (this->ships[makeKey(move)]->hitNum == this->ships[makeKey(move)]->size) ? AttackResult::Miss : AttackResult::Hit;
+		}
+		if (isupper(c) || islower(c)) 
+		{
+			this->board[move.depth][move.row][move.col] = isupper(c) ? HitMarkA : HitMarkB;
+			this->ships[makeKey(move)]->hitNum++;
+			return (this->ships[makeKey(move)]->hitNum == this->ships[makeKey(move)]->size) ? AttackResult::Sink : AttackResult::Hit;
+		}
 	}
-	if (isupper(c) || islower(c)) {
-	this->board[boardMove.first][boardMove.second] = isupper(c) ? HitMarkA : HitMarkB;
-	this->ships[makeKey(boardMove)]->hitNum++;
-	return (this->ships[makeKey(boardMove)]->hitNum == this->ships[makeKey(boardMove)]->size) ? AttackResult::Sink : AttackResult::Hit;
-	}
-	}
-	*/
-
 	return AttackResult::Miss;
 }
 
