@@ -103,9 +103,9 @@ public:
 					if (!isCharValid(this->board[i][j][z])) this->board[i][j][z] = ' ';
 	}
 
+
 	BattleBoard(const char** initBoard, int R = 10, int C = 10) :playerToolsNum(5)
 	{
-		/*
 		this->R = R;
 		this->C = C;
 
@@ -115,36 +115,26 @@ public:
 
 		for (int i = 0; i < this->R; i++)
 		{
-		this->board[i] = _strdup(initBoard[i]);
+			this->board[i] = _strdup(initBoard[i]);
 		}
-		*/
-		
 	}
 
 	// destructor
 	~BattleBoard()
 	{
-		/*
 		if (this->board != NULL)
 		{
-		set<Vessel*> vessles;
-		for (int i = 0; i < this->R; i++)
-		{
-		delete[] this->board[i];
+			set<Vessel*> vessles;
+			for (auto const& element : this->ships)
+				vessles.insert(element.second);
+			for (auto const& element : vessles)
+				delete[] element;
 		}
-		for (auto const& element : this->ships)
-		vessles.insert(element.second);
-		for (auto const& element : vessles)
-		delete[] element;
-		}
-		*/
-		
 	}
 
 	bool isBoardValid(vector<string>& error_messages);
 	pair<int, int> CalcScore();
 	int CheckVictory();
-	BattleBoard BattleBoard::getPlayerBoard(Player player) const;
-	AttackResult performGameMove(int p, Coordinate move);
-	virtual char charAt(Coordinate c) const  override;
+	void getPlayerBoard(Player player, char** &pBoard) const;
+	AttackResult performGameMove(int p, pair<int, int> move);
 };
