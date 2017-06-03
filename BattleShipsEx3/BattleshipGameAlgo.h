@@ -24,7 +24,7 @@ class BattleshipGameAlgo : public IBattleshipGameAlgo
 {
 public:
 	int playerNum;
-	//BattleBoard* playerBoard = nullptr;
+	unique_ptr<BattleBoard> playerBoard = nullptr;
 	targetVessel* target = nullptr;
 	int hostileShipsNum = -1;
 

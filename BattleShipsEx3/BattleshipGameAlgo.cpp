@@ -10,7 +10,7 @@ IBattleshipGameAlgo* GetAlgorithm()
 
 void BattleshipGameAlgo::setPlayer(int player)
 {
-	
+	this->playerNum = player;
 }
 
 /*

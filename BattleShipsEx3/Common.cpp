@@ -1,6 +1,7 @@
 #include "Common.h"
 #include <algorithm>
 #include <ctype.h>
+#include <numeric>
 
 
 std::vector<std::string> splitString(std::string str, char c)
@@ -127,4 +128,38 @@ map<string, string> getConfigParams(string path)
 	}
 
 	return result;
+}
+
+int Factorial(int n)
+{
+	int result = 1;
+	while (n>1) {
+		result *= n--;
+	}
+	return result;
+}
+
+/*
+ *chooses n from 2
+ */
+vector<pair<int,int>> PairesPermGenerator(int n)
+{
+	vector<pair<int, int>> permutations;
+	std::vector<int> d(n);
+	std::iota(d.begin(), d.end(), 1);
+	
+	int repeat = Factorial(n - 2);
+	do
+	{
+		permutations.push_back(make_pair(d[0], d[1]));
+		
+		
+		for (int i = 1; i != repeat; ++i)
+		{
+			next_permutation(d.begin(), d.end());
+		}
+	} while (next_permutation(d.begin(), d.end()));
+
+
+	return permutations;
 }

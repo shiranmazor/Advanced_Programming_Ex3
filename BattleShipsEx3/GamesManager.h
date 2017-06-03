@@ -73,7 +73,7 @@ load algorithms and board file for one game
 */
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
 	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards);
-void CalcCompetitionGames();
+map<int, tuple<int, int, int>> getGameCombinations(int playersNum, int boardsNumber);
 
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
 	IBattleshipGameAlgo* pB, int currentName);
@@ -83,6 +83,6 @@ call load dll and init game
 create players
 create boardgame instace and check validity of the board
 */
-unique_ptr<GameResult> playSingleGame(pair<string, string> dllNames, GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
-	shared_ptr<BattleBoard> board);
+GameResult playSingleGame(pair<string, string> dllNames, GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
+	BattleBoard* board);
 int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads);
