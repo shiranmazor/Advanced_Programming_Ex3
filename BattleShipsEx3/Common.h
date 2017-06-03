@@ -31,6 +31,8 @@ int getShipSize(char C);
 int getShipScore(char C);
 bool isCharValid(char C);
 Coordinate fitCoordinate(Coordinate coor);
+int Factorial(int n);
+vector<pair<int, int>> PairesPermGenerator(int n);
 
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
 	IBattleshipGameAlgo* pB, int currentName);

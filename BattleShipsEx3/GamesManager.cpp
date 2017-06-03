@@ -1,6 +1,7 @@
 #include "GamesManager.h"
 #include <memory>
 #include "BattleBoard.h"
+#include <thread>
 
 
 void closeDLLs(vector<HINSTANCE> dlls)
@@ -115,24 +116,31 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 }
 
 int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads)
-{;
+{
+	vector<thread> gameThreads;
 	vector<HINSTANCE> dllLoaded;
 	//load dll's
 	vector<GetAlgorithmFuncType> algorithmFuncs;
 	vector<shared_ptr<BattleBoard>> boards;
+	map<int, pair<GetAlgorithmFuncType,string>> playersAlgo;
 
 	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
 		return -1;
 
-	//create game combinations
 	//first create a map of player unique number to algo name
-	map<int, GetAlgorithmFuncType> playersAlgo;
 	int i = 0;
-	for(auto algo : algorithmFuncs)
+	for (auto algo : algorithmFuncs)
 	{
-		playersAlgo.insert(make_pair(i, algo));
+		playersAlgo[i] = make_pair(algo, dllFiles[i]);
 		i++;
 	}
+
+	//create game combinations 
+	map<int, tuple<int, int, int>> gamesMap = getGameCombinations(int(playersAlgo.size()), int(boards.size()));
+	//create games queue
+	
+	
+	
 		
 
 	//finish manage games release dlls
@@ -140,25 +148,45 @@ int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads
 
 }
 
-void getGameCombinations(map<int, GetAlgorithmFuncType> playersAlgo, vector<shared_ptr<BattleBoard>> boards)
+/*
+ *calculate the game rounds and attach players number to each game
+ *return games map < gameNumber(int), value = tuple(board num, playerA number, player B number)>
+ */
+map<int, tuple<int, int, int>> getGameCombinations(int playersNum, int boardsNumber)
 {
+	map<int, tuple<int, int, int>> gamesMap;
+	int gamesCounter = 1;
+	//calc all players permutations
+	vector<pair<int, int>> playersPermutations = PairesPermGenerator(playersNum);
+	//scan all boards, attach players to each board
 	
+	for(int boardNum = 1; boardNum <= boardsNumber; boardNum++)
+	{
+		
+		for(auto permutation: playersPermutations)
+		{
+			gamesMap[gamesCounter] = make_tuple(boardNum, permutation.first, permutation.second);
+			gamesCounter++;
+		}
+
+	}
+	return gamesMap;
 }
 /*
- *algorithmFuncs c
+ *playSingleGame : dllNames include playerA dll name and playerB dll name
  */
-unique_ptr<GameResult> playSingleGame(pair<string,string> dllNames,GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
-	shared_ptr<BattleBoard> board)
+GameResult playSingleGame(pair<string,string> dllNames,GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
+	BattleBoard* board)
 {
 	//create players instance
 	unique_ptr<IBattleshipGameAlgo> playerA(algorithmFuncs1());
 	unique_ptr<IBattleshipGameAlgo> playerB(algorithmFuncs2());
-	unique_ptr<GameResult> result = make_unique<GameResult>(get<0>(dllNames), get<1>(dllNames));
+	GameResult result(get<0>(dllNames), get<1>(dllNames));
 
 	playerA->setPlayer(A);
 	playerB->setPlayer(B);
 	
-	//Todo: check for any potential memory leak in this lines
+	//Todo: check for any potential memory leak in this lines after implement set board
 	playerA->setBoard(board->getPlayerBoard(A));
 	playerA->setBoard(board->getPlayerBoard(B));
 
@@ -227,10 +255,10 @@ unique_ptr<GameResult> playSingleGame(pair<string,string> dllNames,GetAlgorithmF
 	//check victory:
 	if (victory)
 	{
-		result->winPlayer = winPlayer;
+		result.winPlayer = winPlayer;
 	}
-	result->playerAScore = get<0>(gameScore);
-	result->playerBScore = get<1>(gameScore);
+	result.playerAScore = get<0>(gameScore);
+	result.playerBScore = get<1>(gameScore);
 	return result;
 }
 
