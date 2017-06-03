@@ -34,13 +34,10 @@ void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth) const
 
 void BattleshipGameAlgo::setBoard(const BoardData& board)
 {
-	/*
 	this->playerNum = player;
 	delete this->playerBoard; //avoid memory leak
 	this->playerBoard = new BattleBoard(board, numRows, numCols);
 	this->hostileShipsNum = this->playerBoard->playerToolsNum;
-	*/
-
 }
 
 /*
