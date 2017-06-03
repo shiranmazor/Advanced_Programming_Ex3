@@ -18,6 +18,7 @@ public:
 	int direction = -1;
 	int edgeReached = -1;
 	pair<int, int> edges[2];
+	Coordinate* newEdges[2];
 };
 
 class BattleshipGameAlgo : public IBattleshipGameAlgo
@@ -50,7 +51,7 @@ public:
 	virtual void notifyOnAttackResult(int player, Coordinate move, AttackResult result)  override;
 
 private:
-	void _markIrrelevant(int i, int j) const;
+	void _markIrrelevant(int row, int col, int depth) const;
 	bool _canAttack(int i, int j) const;
 	pair<int, int> _getBestGuess() const;
 };
