@@ -193,11 +193,19 @@ BattleBoard BattleBoard::getPlayerBoard(Player player) const
 {
 	BattleBoard pBoard(*this);
 	pBoard.ships = {};
+	set<shared_ptr<Vessel>> seenVessels;
 
 	for (int z = 0; z < pBoard.depth(); z++)
 		for (int i = 0; i < pBoard.rows(); i++)
 			for (int j = 0; j < pBoard.cols(); j++)
 				if (!isPlayerChar(player, pBoard.board[z][i][j])) pBoard.board[z][i][j] = ' ';
+
+	for (auto const& element : this->ships)
+		if (element.second->player == player && seenVessels.find(element.second) == seenVessels.end())
+		{
+			seenVessels.insert(element.second);
+			pBoard.playerShips[tolower(element.second->type)]++;
+		}
 
 	return pBoard;
 }

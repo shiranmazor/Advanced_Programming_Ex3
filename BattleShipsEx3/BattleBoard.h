@@ -51,7 +51,8 @@ class BattleBoard : public BoardData
 public:
 	vector<vector<vector<char>>> board;
 	int playerToolsNum;
-	unordered_map<string, shared_ptr<Vessel>> ships;
+	unordered_map<char, int> playerShips = { { 'd', 0 }, { 'm', 0 }, { 'p', 0 }, { 'b', 0 } }; // used by game algo
+	unordered_map<string, shared_ptr<Vessel>> ships; // used by main board
 
 	// Blocking Assignment
 	//BattleBoard(const BattleBoard&) = delete;

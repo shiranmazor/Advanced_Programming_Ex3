@@ -18,7 +18,7 @@ public:
 	int direction = -1;
 	int edgeReached = -1;
 	//pair<int, int> edges[2];
-	Coordinate newEdges[2] = { Coordinate(-1, -1, -1), Coordinate(-1, -1, -1) }
+	Coordinate newEdges[2] = { Coordinate(-1, -1, -1), Coordinate(-1, -1, -1) };
 };
 
 class BattleshipGameAlgo : public IBattleshipGameAlgo
@@ -28,6 +28,7 @@ public:
 	unique_ptr<BattleBoard> playerBoard = nullptr;
 	targetVessel* target = nullptr;
 	int hostileShipsNum = -1;
+	unordered_map<char, int> myShips = { {'d', 0}, {'m', 0}, {'p', 0}, {'b', 0} };
 
 	// Blocking Copy and Assignment
 	BattleshipGameAlgo(const BattleshipGameAlgo&) = delete;
@@ -52,6 +53,6 @@ public:
 
 private:
 	void _markIrrelevant(int row, int col, int depth) const;
-	bool _canAttack(int i, int j) const;
+	bool _canAttack(int z, int i, int j) const;
 	pair<int, int> _getBestGuess() const;
 };

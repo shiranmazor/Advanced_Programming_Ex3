@@ -13,18 +13,16 @@ void BattleshipGameAlgo::setPlayer(int player)
 	this->playerNum = player;
 }
 
-/*
-bool BattleshipGameAlgo::_canAttack(int i, int j) const
+bool BattleshipGameAlgo::_canAttack(int z, int i, int j) const
 {
-return (i >= 0 && i < this->playerBoard->R && j >= 0 && j < this->playerBoard->C && this->playerBoard->board[i][j] == ' ');
+	return (i >= 0 && i < this->playerBoard->rows() && j >= 0 && j < this->playerBoard->cols() && z >= 0 && z < this->playerBoard->depth() && this->playerBoard->board[z][i][j] == ' ');
 }
-*/
 
 void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth) const
 {
-	if (row >= 0 && row < this->playerBoard->rows &&
-		col >= 0 && col < this->playerBoard->cols &&
-		depth >= 0 && depth < this->playerBoard->depth)
+	if (row >= 0 && row < this->playerBoard->rows() &&
+		col >= 0 && col < this->playerBoard->cols() &&
+		depth >= 0 && depth < this->playerBoard->depth())
 	{
 		this->playerBoard->board[row][col][depth] = irrelevnatCell;
 	}
