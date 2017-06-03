@@ -19,7 +19,7 @@ using namespace std;
 #define isOppChar(x, y) ((x==A && islower(y)) || (x==B && isupper(y)))
 #define HitMarkA '*'
 #define HitMarkB '#'
-#define makeKey(x) (std::to_string(x.row) + '_' + std::to_string(x.col) + '_' + std::to_string(x.depth))
+#define makeKey(x) (to_string(x.row) + '_' + to_string(x.col) + '_' + to_string(x.depth))
 #define isAlreadyHit(x) (x == '*' || x == '#')
 
 const char idx2ship[8] = { 'B', 'P', 'M', 'D', 'b', 'p', 'm', 'd' };
@@ -51,9 +51,9 @@ class BattleBoard : public BoardData
 public:
 	vector<vector<vector<char>>> board;
 	int playerToolsNum;
-	unordered_map<string, Vessel*> ships;
+	unordered_map<string, shared_ptr<Vessel>> ships;
 
-	// Blocking Copy and Assignment
+	// Blocking Assignment
 	//BattleBoard(const BattleBoard&) = delete;
 	BattleBoard& operator = (const BattleBoard&) = delete;
 
@@ -113,21 +113,8 @@ public:
 	// destructor
 	~BattleBoard()
 	{
-		/*
-		if (this->board != NULL)
-		{
-		set<Vessel*> vessles;
-		for (int i = 0; i < this->R; i++)
-		{
-		delete[] this->board[i];
-		}
-		for (auto const& element : this->ships)
-		vessles.insert(element.second);
-		for (auto const& element : vessles)
-		delete[] element;
-		}
-		*/
-		
+		for (auto element : this->ships)
+			element.second.reset();
 	}
 
 	bool isBoardValid(vector<string>& error_messages);
@@ -136,4 +123,8 @@ public:
 	BattleBoard BattleBoard::getPlayerBoard(Player player) const;
 	AttackResult performGameMove(int p, Coordinate move);
 	virtual char charAt(Coordinate c) const  override;
+
+private:
+	int _getShipDirection(int z, int i, int j);
+	void _collect_ship(int z, int i, int j, set<Coordinate>* s);
 };
