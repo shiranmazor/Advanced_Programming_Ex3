@@ -113,21 +113,8 @@ public:
 	// destructor
 	~BattleBoard()
 	{
-		/*
-		if (this->board != NULL)
-		{
-		set<Vessel*> vessles;
-		for (int i = 0; i < this->R; i++)
-		{
-		delete[] this->board[i];
-		}
-		for (auto const& element : this->ships)
-		vessles.insert(element.second);
-		for (auto const& element : vessles)
-		delete[] element;
-		}
-		*/
-		
+		for (auto element : this->ships)
+			element.second.reset();
 	}
 
 	bool isBoardValid(vector<string>& error_messages);
