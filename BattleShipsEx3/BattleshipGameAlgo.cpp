@@ -215,13 +215,13 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 			{
 				this->target = new targetVessel();
 				this->target->newEdges[0] = Coordinate(row, col, depth);
-				this->target->newEdges[1] = Coordinate(-1, -1, -1);
+				//this->target->newEdges[1] = Coordinate(-1, -1, -1);
 			}
 			else
 			{
-				if (this->target->newEdges[1]->row == -1 && 
-					this->target->newEdges[1]->col == -1 && 
-					this->target->newEdges[1]->depth == -1)
+				if (this->target->newEdges[1].row == -1 && 
+					this->target->newEdges[1].col == -1 && 
+					this->target->newEdges[1].depth == -1)
 				{
 					this->target->newEdges[1] = Coordinate(row, col, depth);
 					if (this->target->newEdges[0].row == this->target->newEdges[1].row) {

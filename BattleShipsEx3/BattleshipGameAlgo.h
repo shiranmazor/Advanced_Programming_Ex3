@@ -17,8 +17,8 @@ class targetVessel
 public:
 	int direction = -1;
 	int edgeReached = -1;
-	pair<int, int> edges[2];
-	Coordinate newEdges[2];
+	//pair<int, int> edges[2];
+	Coordinate newEdges[2] = { Coordinate(-1, -1, -1), Coordinate(-1, -1, -1) }
 };
 
 class BattleshipGameAlgo : public IBattleshipGameAlgo
