@@ -21,7 +21,7 @@ bool BattleshipGameAlgo::_canAttack(int z, int i, int j) const
 			this->playerBoard.board[z][i][j] == ' ');
 }
 
-void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth) const
+void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth)
 {
 	if (row >= 0 && row < this->playerBoard.rows &&
 		col >= 0 && col < this->playerBoard.cols &&
@@ -40,13 +40,6 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 	this->playerBoard.cols = board.cols();
 	this->playerBoard.depth = board.depth();
 
-	//this->playerBoard.board = vector<vector<vector<char>>>(this->playerBoard.depth);
-	//for (int z = 0; z < this->playerBoard.depth; z++)
-	//{
-	//	this->playerBoard.board[z] = vector<vector<char>>(this->playerBoard.rows);
-	//	for (int i = 0; i < this->playerBoard.rows; i++) this->playerBoard.board[z][i] = vector<char>(this->playerBoard.cols);
-	//}
-
 	// Copy board data to playerBoard
 	for (int z = 0; z < this->playerBoard.depth; z++)
 	{
@@ -58,7 +51,6 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 			{
 				current = board.charAt(Coordinate(i + 1, j + 1, z + 1));
 				this->playerBoard.board[z][i].push_back(current);
-				//this->playerBoard.board[z][i][j] = current;
 				if (current != ' ') this->playerBoard.hostileShips[current]++;
 			}
 		}

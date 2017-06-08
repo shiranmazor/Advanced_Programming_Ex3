@@ -67,7 +67,7 @@ public:
 	virtual void notifyOnAttackResult(int player, Coordinate move, AttackResult result)  override;
 
 private:
-	void _markIrrelevant(int row, int col, int depth) const;
+	void _markIrrelevant(int row, int col, int depth);
 	bool _canAttack(int z, int i, int j) const;
 	Coordinate _getBestGuess() const;
 };
