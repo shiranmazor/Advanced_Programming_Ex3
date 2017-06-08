@@ -51,8 +51,7 @@ class BattleBoard : public BoardData
 public:
 	vector<vector<vector<char>>> board;
 	int playerToolsNum;
-	unordered_map<char, int> playerShips = { { 'd', 0 }, { 'm', 0 }, { 'p', 0 }, { 'b', 0 } }; // used by game algo
-	unordered_map<string, shared_ptr<Vessel>> ships; // used by main board
+	unordered_map<string, shared_ptr<Vessel>> ships;
 
 	// Blocking Assignment
 	//BattleBoard(const BattleBoard&) = delete;
@@ -126,6 +125,6 @@ public:
 	virtual char charAt(Coordinate c) const  override;
 
 private:
-	int _getShipDirection(int z, int i, int j);
+	//int _getShipDirection(int z, int i, int j);
 	void _collect_ship(int z, int i, int j, set<Coordinate>* s);
 };

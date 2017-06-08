@@ -16,7 +16,7 @@
 #define MySinkMark '!'
 #define OpSinkMark '?'
 
-#define _make_pair(x, y) make_pair(x + 1, y + 1)
+#define _Coordinate(z, x, y) Coordinate(z + 1, x + 1, y + 1)
 
 enum Player { A, B };
 using namespace std;
@@ -29,6 +29,7 @@ map<string, string> getConfigParams(string path);
 
 int getShipSize(char C);
 int getShipScore(char C);
+char getShipBySize(int size);
 bool isCharValid(char C);
 Coordinate fitCoordinate(Coordinate coor);
 int Factorial(int n);

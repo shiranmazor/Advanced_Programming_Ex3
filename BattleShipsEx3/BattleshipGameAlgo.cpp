@@ -15,175 +15,224 @@ void BattleshipGameAlgo::setPlayer(int player)
 
 bool BattleshipGameAlgo::_canAttack(int z, int i, int j) const
 {
-	return (i >= 0 && i < this->playerBoard->rows() && j >= 0 && j < this->playerBoard->cols() && z >= 0 && z < this->playerBoard->depth() && this->playerBoard->board[z][i][j] == ' ');
+	return (i >= 0 && i < this->playerBoard.rows && 
+			j >= 0 && j < this->playerBoard.cols && 
+			z >= 0 && z < this->playerBoard.depth && 
+			this->playerBoard.board[z][i][j] == ' ');
 }
 
 void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth) const
 {
-	if (row >= 0 && row < this->playerBoard->rows() &&
-		col >= 0 && col < this->playerBoard->cols() &&
-		depth >= 0 && depth < this->playerBoard->depth())
+	if (row >= 0 && row < this->playerBoard.rows &&
+		col >= 0 && col < this->playerBoard.cols &&
+		depth >= 0 && depth < this->playerBoard.depth)
 	{
-		this->playerBoard->board[row][col][depth] = irrelevnatCell;
+		this->playerBoard.board[row][col][depth] = irrelevnatCell;
 	}
 }
 
 
-/*
+
 void BattleshipGameAlgo::setBoard(const BoardData& board)
 {
-	this->playerNum = player;
-	delete this->playerBoard; //avoid memory leak
-	this->playerBoard = new BattleBoard(board, numRows, numCols);
-	this->hostileShipsNum = this->playerBoard->playerToolsNum;
-}*/
+	char current;
+	this->playerBoard.rows = board.rows();
+	this->playerBoard.cols = board.cols();
+	this->playerBoard.depth = board.depth();
 
-/*
-bool BattleshipGameAlgo::init(const std::string& path)
-{
-set<pair<int, int>> irrelevantCells;
-for (int i = 0; i < this->playerBoard->R; i++)
-{
-for (int j = 0; j < this->playerBoard->C; j++)
-{
+	//this->playerBoard.board = vector<vector<vector<char>>>(this->playerBoard.depth);
+	//for (int z = 0; z < this->playerBoard.depth; z++)
+	//{
+	//	this->playerBoard.board[z] = vector<vector<char>>(this->playerBoard.rows);
+	//	for (int i = 0; i < this->playerBoard.rows; i++) this->playerBoard.board[z][i] = vector<char>(this->playerBoard.cols);
+	//}
 
-if (this->playerBoard->board[i][j] != ' ') {
-if (i + 1 < this->playerBoard->R && this->playerBoard->board[i + 1][j] == ' ') irrelevantCells.insert(make_pair(i + 1, j));
-if (i > 0 && this->playerBoard->board[i - 1][j] == ' ') irrelevantCells.insert(make_pair(i - 1, j));
-if (j + 1 < this->playerBoard->C && this->playerBoard->board[i][j + 1] == ' ') irrelevantCells.insert(make_pair(i, j + 1));
-if (j > 0 && this->playerBoard->board[i][j - 1] == ' ') irrelevantCells.insert(make_pair(i, j - 1));
-}
-}
-}
-for (auto const& cell : irrelevantCells)
-this->_markIrrelevant(cell.first, cell.second);
-return true;
-}
+	// Copy board data to playerBoard
+	for (int z = 0; z < this->playerBoard.depth; z++)
+	{
+		this->playerBoard.board.push_back(vector<vector<char>>());
+		for (int i = 0; i < this->playerBoard.rows; i++)
+		{
+			this->playerBoard.board[z].push_back(vector<char>());
+			for (int j = 0; j < this->playerBoard.cols; j++)
+			{
+				current = board.charAt(Coordinate(i + 1, j + 1, z + 1));
+				this->playerBoard.board[z][i].push_back(current);
+				//this->playerBoard.board[z][i][j] = current;
+				if (current != ' ') this->playerBoard.hostileShips[current]++;
+			}
+		}
+	}
 
-pair<int, int> BattleshipGameAlgo::_getBestGuess() const
-{
-vector<vector<int>> scoreBoard(this->playerBoard->R, vector<int>(this->playerBoard->C));
-bool goodI, goodJ;
-pair<int, int> bestCell;
-int bestScore = -1;
+	for (char c : shipsBySize) this->playerBoard.hostileShips[c] = this->playerBoard.hostileShips[c] / getShipSize(c);
 
-for (int i = 0; i < this->playerBoard->R; i++)
-for (int j = 0; j < this->playerBoard->C; j++) scoreBoard[i][j] = 0;
-
-// Calculate score for each cell on the board according to how many ships
-// could be placed there (and how much points those ships are worth)
-for (char ship : shipsBySize)
-{
-for (int i = 0; i < this->playerBoard->R; i++)
-{
-for (int j = 0; j < this->playerBoard->C; j++)
-{
-if (this->_canAttack(i, j))
-{
-goodI = true;
-goodJ = true;
-for (int l = 1; l < getShipSize(ship); l++) // Verify there is room for the whole ship
-{
-if (!this->_canAttack(i + l, j)) goodI = false;
-if (!this->_canAttack(i, j + l)) goodJ = false;
-}
-for (int l = 0; l < getShipSize(ship); l++) // Add ship's score to all relevant cells
-{
-if (goodI) scoreBoard[i + l][j] += getShipScore(ship);
-if (goodJ && getShipSize(ship) > 1) scoreBoard[i][j + l] += getShipScore(ship); // Prevent double scoring for 1 cell ships
-}
-}
-}
-}
+	set<Coordinate> irrelevantCells;
+	for (int z = 0; z < this->playerBoard.depth; z++)
+	{
+		for (int i = 0; i < this->playerBoard.rows; i++)
+		{
+			for (int j = 0; j < this->playerBoard.cols; j++)
+			{
+				if (this->playerBoard.board[z][i][j] != ' ')
+				{
+					if (i + 1 < this->playerBoard.rows && this->playerBoard.board[z][i + 1][j] == ' ') irrelevantCells.insert(Coordinate(z, i + 1, j));
+					if (i > 0 && this->playerBoard.board[z][i - 1][j] == ' ') irrelevantCells.insert(Coordinate(z, i - 1, j));
+					if (j + 1 < this->playerBoard.cols && this->playerBoard.board[z][i][j + 1] == ' ') irrelevantCells.insert(Coordinate(z, i, j + 1));
+					if (j > 0 && this->playerBoard.board[z][i][j - 1] == ' ') irrelevantCells.insert(Coordinate(z, i, j - 1));
+					if (z + 1 < this->playerBoard.depth && this->playerBoard.board[z + 1][i][j] == ' ') irrelevantCells.insert(Coordinate(z + 1, i, j));
+					if (z > 0 && this->playerBoard.board[z - 1][i][j] == ' ') irrelevantCells.insert(Coordinate(z - 1, i, j));
+				}
+			}
+		}
+	}
+	for (auto const& cell : irrelevantCells)
+		this->_markIrrelevant(cell.row, cell.col, cell.depth);
 }
 
-// Find highest scored cell
-for (int i = 0; i < this->playerBoard->R; i++)
+// TODO - new _getBestGuess using hostileShips dict (try to fit all these exact ships on the board)
+
+Coordinate BattleshipGameAlgo::_getBestGuess() const
 {
-for (int j = 0; j < this->playerBoard->C; j++)
+	/*vector<vector<int>> scoreBoard(this->playerBoard->R, vector<int>(this->playerBoard->C));
+	bool goodI, goodJ;
+	pair<int, int> bestCell;
+	int bestScore = -1;
+
+	for (int i = 0; i < this->playerBoard->R; i++)
+		for (int j = 0; j < this->playerBoard->C; j++) scoreBoard[i][j] = 0;
+
+	// Calculate score for each cell on the board according to how many ships
+	// could be placed there (and how much points those ships are worth)
+	for (char ship : shipsBySize)
+	{
+		for (int i = 0; i < this->playerBoard->R; i++)
+		{
+			for (int j = 0; j < this->playerBoard->C; j++)
+			{
+				if (this->_canAttack(i, j))
+				{
+					goodI = true;
+					goodJ = true;
+					for (int l = 1; l < getShipSize(ship); l++) // Verify there is room for the whole ship
+					{
+						if (!this->_canAttack(i + l, j)) goodI = false;
+						if (!this->_canAttack(i, j + l)) goodJ = false;
+					}
+					for (int l = 0; l < getShipSize(ship); l++) // Add ship's score to all relevant cells
+					{
+						if (goodI) scoreBoard[i + l][j] += getShipScore(ship);
+						if (goodJ && getShipSize(ship) > 1) scoreBoard[i][j + l] += getShipScore(ship); // Prevent double scoring for 1 cell ships
+					}
+				}
+			}
+		}
+	}
+
+	// Find highest scored cell
+	for (int i = 0; i < this->playerBoard->R; i++)
+	{
+		for (int j = 0; j < this->playerBoard->C; j++)
+		{
+			if (scoreBoard[i][j] > bestScore)
+			{
+				bestScore = scoreBoard[i][j];
+				bestCell = _make_pair(i, j);
+			}
+		}
+	}
+
+	if (_canAttack(bestCell.first - 1, bestCell.second - 1)) return bestCell;
+
+	// No more available moves (safety)
+	return make_pair(-1, -1);*/
+	return _Coordinate(0, 0, 0);
+}
+
+
+
+Coordinate BattleshipGameAlgo::attack()
 {
-if (scoreBoard[i][j] > bestScore)
-{
-bestScore = scoreBoard[i][j];
-bestCell = _make_pair(i, j);
-}
-}
-}
-
-if (_canAttack(bestCell.first - 1, bestCell.second - 1)) return bestCell;
-
-// No more available moves (safety)
-return make_pair(-1, -1);
-}
-
-*/
-
-
-
-Coordinate  BattleshipGameAlgo::attack()
-{
-	return Coordinate(0, 0, 0);
-	/*
 	// search mode - trying to find opponent ship
 	if (this->target == nullptr)
-	return _getBestGuess();
+		return _getBestGuess();
 
 	// target mode - targeting a specific ship
-	if (this->target->direction == -1) // don't know direction yet
+	if (this->target->direction < 1) // don't know direction or no direction
 	{
-	if (this->_canAttack(this->target->edges[0].first - 1, this->target->edges[0].second)) return _make_pair(this->target->edges[0].first - 1, this->target->edges[0].second);
-	if (this->_canAttack(this->target->edges[0].first + 1, this->target->edges[0].second)) return _make_pair(this->target->edges[0].first + 1, this->target->edges[0].second);
-	if (this->_canAttack(this->target->edges[0].first, this->target->edges[0].second + 1)) return _make_pair(this->target->edges[0].first, this->target->edges[0].second + 1);
-	if (this->_canAttack(this->target->edges[0].first, this->target->edges[0].second - 1)) return _make_pair(this->target->edges[0].first, this->target->edges[0].second - 1);
+		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
+		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
+		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
+		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
+		if (this->_canAttack(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col);
+		if (this->_canAttack(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col);
 	}
-	if (this->target->direction == 0) // horizontal
+	if (this->target->direction == 1) // horizontal
 	{
-	if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
-	{
-	if (this->target->edges[0].second > this->target->edges[1].second && this->_canAttack(this->target->edges[0].first, this->target->edges[0].second + 1))
-	return _make_pair(this->target->edges[0].first, this->target->edges[0].second + 1);
-	if (this->target->edges[0].second < this->target->edges[1].second && this->_canAttack(this->target->edges[0].first, this->target->edges[0].second - 1))
-	return _make_pair(this->target->edges[0].first, this->target->edges[0].second - 1);
-	// in the case that an attack cannot be made from this edge, mark it as reached
-	this->target->edgeReached = 0;
+		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
+		{
+			if (this->target->newEdges[0].col > this->target->newEdges[1].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
+			if (this->target->newEdges[0].col < this->target->newEdges[1].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
+			// in the case that an attack cannot be made from this edge, mark it as reached
+			this->target->edgeReached = 0;
+		}
+		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
+		{
+			if (this->target->newEdges[1].col > this->target->newEdges[0].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col + 1))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col + 1);
+			if (this->target->newEdges[1].col < this->target->newEdges[0].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col - 1))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col - 1);
+			// in the case that an attack cannot be made from this edge, mark it as reached
+			this->target->edgeReached = 1;
+		}
 	}
-	if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
+	else if (this->target->direction == 2) // vertical
 	{
-	if (this->target->edges[1].second > this->target->edges[0].second && this->_canAttack(this->target->edges[1].first, this->target->edges[1].second + 1))
-	return _make_pair(this->target->edges[1].first, this->target->edges[1].second + 1);
-	if (this->target->edges[1].second < this->target->edges[0].second && this->_canAttack(this->target->edges[1].first, this->target->edges[1].second - 1))
-	return _make_pair(this->target->edges[1].first, this->target->edges[1].second - 1);
-	// in the case that an attack cannot be made from this edge, mark it as reached
-	this->target->edgeReached = 1;
+		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
+		{
+			if (this->target->newEdges[0].row > this->target->newEdges[1].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
+			if (this->target->newEdges[0].row < this->target->newEdges[1].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col - 1);
+			// in the case that an attack cannot be made from this edge, mark it as reached
+			this->target->edgeReached = 0;
+		}
+		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
+		{
+			if (this->target->newEdges[1].row > this->target->newEdges[0].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row + 1, this->target->newEdges[1].col))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row + 1, this->target->newEdges[1].col);
+			if (this->target->newEdges[1].row < this->target->newEdges[0].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row - 1, this->target->newEdges[1].col))
+				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row - 1, this->target->newEdges[1].col);
+			// in the case that an attack cannot be made from this edge, mark it as reached
+			this->target->edgeReached = 1;
+		}
 	}
-	}
-	else // this->target->direction == 1, vertical
+	else // this->target->direction == 3 => z/depth axis
 	{
-	if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
-	{
-	if (this->target->edges[0].first > this->target->edges[1].first && this->_canAttack(this->target->edges[0].first + 1, this->target->edges[0].second))
-	return _make_pair(this->target->edges[0].first + 1, this->target->edges[0].second);
-	if (this->target->edges[0].first < this->target->edges[1].first && this->_canAttack(this->target->edges[0].first - 1, this->target->edges[0].second))
-	return _make_pair(this->target->edges[0].first - 1, this->target->edges[0].second - 1);
-	// in the case that an attack cannot be made from this edge, mark it as reached
-	this->target->edgeReached = 0;
-	}
-	if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
-	{
-	if (this->target->edges[1].first > this->target->edges[0].first && this->_canAttack(this->target->edges[1].first + 1, this->target->edges[1].second))
-	return _make_pair(this->target->edges[1].first + 1, this->target->edges[1].second);
-	if (this->target->edges[1].first < this->target->edges[0].first && this->_canAttack(this->target->edges[1].first - 1, this->target->edges[1].second))
-	return _make_pair(this->target->edges[1].first - 1, this->target->edges[1].second);
-	// in the case that an attack cannot be made from this edge, mark it as reached
-	this->target->edgeReached = 1;
-	}
+		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
+		{
+			if (this->target->newEdges[0].depth > this->target->newEdges[1].depth && this->_canAttack(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col))
+				return _Coordinate(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col);
+			if (this->target->newEdges[0].depth < this->target->newEdges[1].depth && this->_canAttack(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col))
+				return _Coordinate(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
+			// in the case that an attack cannot be made from this edge, mark it as reached
+			this->target->edgeReached = 0;
+		}
+		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
+		{
+			if (this->target->newEdges[1].depth > this->target->newEdges[0].depth && this->_canAttack(this->target->newEdges[1].depth + 1, this->target->newEdges[1].row, this->target->newEdges[0].col))
+				return _Coordinate(this->target->newEdges[1].depth + 1, this->target->newEdges[1].row, this->target->newEdges[0].col);
+			if (this->target->newEdges[1].depth < this->target->newEdges[0].depth && this->_canAttack(this->target->newEdges[1].depth - 1, this->target->newEdges[1].row, this->target->newEdges[0].col))
+				return _Coordinate(this->target->newEdges[1].depth - 1, this->target->newEdges[1].row, this->target->newEdges[0].col);
+			// in the case that an attack cannot be made from this edge, mark it as reached
+			this->target->edgeReached = 1;
+		}
 	}
 
 	// safety, should never get here
 	cout << "BattleshipGameAlgoSmart.attack: Something went wrong, can't find next cell to attack (Player " << this->playerNum << ", currently in " << (this->target == nullptr ? "HUNT" : "TARGET") << " mode)" << endl;
-	return make_pair(-1, -1);
-	*/
-
+	return Coordinate(-1, -1, -1);
 }
 
 void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, AttackResult result)
@@ -275,6 +324,8 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 					this->_markIrrelevant(row - 1, col + 1, depth);
 					this->_markIrrelevant(row - 1, col - 1, depth);
 				}
+
+				this->target->hitCount++;
 			}
 			break;
 		case AttackResult::Sink:
@@ -291,9 +342,12 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 			this->_markIrrelevant(row + 1, col - 1, depth);
 			this->_markIrrelevant(row - 1, col + 1, depth);
 			this->_markIrrelevant(row - 1, col - 1, depth);
+
+			this->playerBoard.hostileShips[getShipBySize(this->target->hitCount + 1)]--;
+
 			delete this->target;
 			this->target = nullptr; // back to search mode
-			this->hostileShipsNum -= 1;
+			//this->hostileShipsNum -= 1;
 			break;
 		default:
 			// safety, should never get here

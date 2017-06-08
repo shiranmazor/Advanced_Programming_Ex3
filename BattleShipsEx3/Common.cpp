@@ -54,6 +54,15 @@ int getShipScore(char C)
 	return 0;//default case
 }
 
+char getShipBySize(int size)
+{
+	if (size == 1) return 'b';
+	if (size == 2) return 'p';
+	if (size == 3) return 'm';
+	if (size == 4) return 'd';
+	return ' ';//default case
+}
+
 bool isCharValid(char C)
 {
 	return tolower(C) == 'b' || tolower(C) == 'p' || tolower(C) == 'm' || tolower(C) == 'd';

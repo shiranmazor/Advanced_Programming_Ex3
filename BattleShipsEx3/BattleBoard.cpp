@@ -7,19 +7,19 @@
 *	2 - going down
 *	3 - going in (deep)
 */
-int BattleBoard::_getShipDirection(int z, int i, int j)
-{
-	if (j != this->cols() - 1 && this->board[z][i][j + 1] == this->board[z][i][j])
-		return 1;
-	
-	if (i != this->rows() - 1 && this->board[z][i + 1][j] == this->board[z][i][j])
-		return 2;
-	
-	if (z != this->depth() - 1 && this->board[z + 1][i][j] == this->board[z][i][j])
-		return 3;
-
-	return 0;
-}
+//int BattleBoard::_getShipDirection(int z, int i, int j)
+//{
+//	if (j != this->cols() - 1 && this->board[z][i][j + 1] == this->board[z][i][j])
+//		return 1;
+//	
+//	if (i != this->rows() - 1 && this->board[z][i + 1][j] == this->board[z][i][j])
+//		return 2;
+//	
+//	if (z != this->depth() - 1 && this->board[z + 1][i][j] == this->board[z][i][j])
+//		return 3;
+//
+//	return 0;
+//}
 
 /*
 * Recursively collect all adjacent cells containing the same symbol
@@ -192,20 +192,20 @@ char BattleBoard::charAt(Coordinate c) const
 BattleBoard BattleBoard::getPlayerBoard(Player player) const
 {
 	BattleBoard pBoard(*this);
-	pBoard.ships = {};
-	set<shared_ptr<Vessel>> seenVessels;
+	vector<string> keys;
 
+	// Remove opponent's vessels from player board
 	for (int z = 0; z < pBoard.depth(); z++)
 		for (int i = 0; i < pBoard.rows(); i++)
 			for (int j = 0; j < pBoard.cols(); j++)
 				if (!isPlayerChar(player, pBoard.board[z][i][j])) pBoard.board[z][i][j] = ' ';
 
+	// Remove opponent's vessels from player board's ships map
 	for (auto const& element : this->ships)
-		if (element.second->player == player && seenVessels.find(element.second) == seenVessels.end())
-		{
-			seenVessels.insert(element.second);
-			pBoard.playerShips[tolower(element.second->type)]++;
-		}
+		if (element.second->player != player)
+			keys.push_back(element.first);
+
+	for (string key : keys) pBoard.ships.erase(key);
 
 	return pBoard;
 }

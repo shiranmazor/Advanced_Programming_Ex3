@@ -16,20 +16,36 @@ class targetVessel
 {
 public:
 	int direction = -1;
+	/*0 - no direction(ship size 1)
+	* 1 - going right
+	* 2 - going down
+	* 3 - going in(deep) */
 	int edgeReached = -1;
 	//pair<int, int> edges[2];
 	Coordinate newEdges[2] = { Coordinate(-1, -1, -1), Coordinate(-1, -1, -1) };
+	int hitCount = 0;
+};
+
+class PlayerBoard
+{
+public:
+	unordered_map<char, int> hostileShips = { { 'd', 0 },{ 'm', 0 },{ 'p', 0 },{ 'b', 0 } };
+	vector<vector<vector<char>>> board;
+	int rows = -1;
+	int cols = -1;
+	int depth = -1;
 };
 
 class BattleshipGameAlgo : public IBattleshipGameAlgo
 {
 public:
 	int playerNum;
-	unique_ptr<BattleBoard> playerBoard = nullptr;
+	PlayerBoard playerBoard;
 	targetVessel* target = nullptr;
-	int hostileShipsNum = -1;
-	unordered_map<char, int> myShips = { {'d', 0}, {'m', 0}, {'p', 0}, {'b', 0} };
-
+	//int hostileShipsNum = -1;
+	//unordered_map<char, int> hostileShips = { { 'd', 0 },{ 'm', 0 },{ 'p', 0 },{ 'b', 0 } };
+	//vector<vector<vector<char>>> playerBoard;
+	
 	// Blocking Copy and Assignment
 	BattleshipGameAlgo(const BattleshipGameAlgo&) = delete;
 	BattleshipGameAlgo& operator = (const BattleshipGameAlgo&) = delete;
@@ -47,12 +63,11 @@ public:
 
 	virtual void setPlayer(int player) override;
 	virtual void setBoard(const BoardData& board) override;
-	//virtual bool init(const std::string& path) override;
 	virtual  Coordinate attack() override;
 	virtual void notifyOnAttackResult(int player, Coordinate move, AttackResult result)  override;
 
 private:
 	void _markIrrelevant(int row, int col, int depth) const;
 	bool _canAttack(int z, int i, int j) const;
-	pair<int, int> _getBestGuess() const;
+	Coordinate _getBestGuess() const;
 };
