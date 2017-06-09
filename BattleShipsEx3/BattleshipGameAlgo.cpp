@@ -21,17 +21,195 @@ bool BattleshipGameAlgo::_canAttack(int z, int i, int j) const
 			this->playerBoard.board[z][i][j] == ' ');
 }
 
-void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth)
+// Has optional arg for board, if not sent updates this->playerBoard
+void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth, vector<vector<vector<char>>>* _board = nullptr)
 {
 	if (row >= 0 && row < this->playerBoard.rows &&
 		col >= 0 && col < this->playerBoard.cols &&
 		depth >= 0 && depth < this->playerBoard.depth)
 	{
-		this->playerBoard.board[row][col][depth] = irrelevnatCell;
+		if (_board != nullptr) 
+		{
+			// create refrence for vector pointers
+			vector<vector<vector<char>>> &board = *_board;
+			board[row][col][depth] = irrelevnatCell;
+			// delete refrence
+			delete &board;
+		}
+		else this->playerBoard.board[row][col][depth] = irrelevnatCell;
 	}
 }
 
+bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>* _board, vector<vector<vector<int>>>* _scoreBoard)
+{
+	unordered_map<char, int> nextHostileShips(hostileShips);
+	char ship = ' ';
+	bool goodZ, goodI, goodJ, resultZ = false, resultI = false, resultJ = false, foundPlace = false;
+	vector<vector<vector<char>>> tempBoard;
+	
+	for (auto const& shipCounter : hostileShips)
+		if (shipCounter.second > 0)
+		{
+			ship = shipCounter.first;
+			nextHostileShips[shipCounter.first]--;
+			break;
+		}
 
+	// Return in case we ran out of ships to place
+	if (ship == ' ') return true;
+
+	// create refrences for vector pointers
+	vector<vector<vector<int>>> &scoreBoard = *_scoreBoard;
+	vector<vector<vector<char>>> &board = *_board;
+	for (int z = 0; z < this->playerBoard.depth; z++)
+	{
+		for (int i = 0; i < this->playerBoard.rows; i++)
+		{
+			for (int j = 0; j < this->playerBoard.cols; j++)
+			{
+				goodZ = true;
+				goodI = true;
+				goodJ = true;
+				
+				// Verify there is room for the whole ship in each axis
+				for (int l = 1; l < getShipSize(ship); l++)
+				{
+					if (!this->_canAttack(z + l, i, j)) goodZ = false;
+					if (!this->_canAttack(z, i + l, j)) goodI = false;
+					if (!this->_canAttack(z, i, j + l)) goodJ = false;
+				}
+				foundPlace = foundPlace || goodZ || goodI || goodJ;
+
+				if (goodZ)
+				{
+					// init temp board
+					for (int z = 0; z < this->playerBoard.depth; z++)
+						for (int i = 0; i < this->playerBoard.rows; i++)
+							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
+
+					// Mark surrounding cells irrelevant
+					for (int l = 0; l < getShipSize(ship); l++)
+					{
+						this->_markIrrelevant(z + l, i, j, &tempBoard);
+						this->_markIrrelevant(z + l + 1, i, j, &tempBoard);
+						this->_markIrrelevant(z + l - 1, i, j, &tempBoard);
+						this->_markIrrelevant(z + l, i + 1, j, &tempBoard);
+						this->_markIrrelevant(z + l, i - 1, j, &tempBoard);
+						this->_markIrrelevant(z + l, i, j + 1, &tempBoard);
+						this->_markIrrelevant(z + l, i, j - 1, &tempBoard);
+					}
+					
+					// call again with reduced hostile ships counter
+					resultZ = this->_placeNextShip(nextHostileShips, &tempBoard, _scoreBoard);
+
+					// Add ship's score to relevant cells
+					if (resultZ)
+						for (int l = 0; l < getShipSize(ship); l++) 
+							scoreBoard[z + l][i][j] += getShipScore(ship);
+
+				}
+				if (goodI)
+				{
+					// init temp board
+					for (int z = 0; z < this->playerBoard.depth; z++)
+						for (int i = 0; i < this->playerBoard.rows; i++)
+							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
+
+					// Add ship's score to relevant cells and mark surrounding cells irrelevant
+					for (int l = 0; l < getShipSize(ship); l++)
+					{
+						this->_markIrrelevant(z, i + l, j, &tempBoard);
+						this->_markIrrelevant(z + 1, i + l, j, &tempBoard);
+						this->_markIrrelevant(z - 1, i + l, j, &tempBoard);
+						this->_markIrrelevant(z, i + l + 1, j, &tempBoard);
+						this->_markIrrelevant(z, i + l - 1, j, &tempBoard);
+						this->_markIrrelevant(z, i + l, j + 1, &tempBoard);
+						this->_markIrrelevant(z, i + l, j - 1, &tempBoard);
+					}
+
+					// call again with reduced hostile ships counter
+					resultI = this->_placeNextShip(nextHostileShips, &tempBoard, _scoreBoard);
+
+					// Add ship's score to relevant cells
+					if (resultI)
+						for (int l = 0; l < getShipSize(ship); l++)
+							scoreBoard[z][i + l][j] += getShipScore(ship);
+				}
+				if (goodJ)
+				{
+					// init temp board
+					for (int z = 0; z < this->playerBoard.depth; z++)
+						for (int i = 0; i < this->playerBoard.rows; i++)
+							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
+
+					// Add ship's score to relevant cells and mark surrounding cells irrelevant
+					for (int l = 0; l < getShipSize(ship); l++)
+					{
+						this->_markIrrelevant(z, i, j + l, &tempBoard);
+						this->_markIrrelevant(z + 1, i, j + l, &tempBoard);
+						this->_markIrrelevant(z - 1, i, j + l, &tempBoard);
+						this->_markIrrelevant(z, i + 1, j + l, &tempBoard);
+						this->_markIrrelevant(z, i - 1, j + l, &tempBoard);
+						this->_markIrrelevant(z, i, j + l + 1, &tempBoard);
+						this->_markIrrelevant(z, i, j + l - 1, &tempBoard);
+					}
+
+					// call again with reduced hostile ships counter
+					resultJ = this->_placeNextShip(nextHostileShips, &tempBoard, _scoreBoard);
+
+					// Add ship's score to relevant cells
+					if (resultJ)
+						for (int l = 0; l < getShipSize(ship); l++)
+							scoreBoard[z][i][j + l] += getShipScore(ship);
+				}
+			}
+		}
+	}
+
+	// delete references
+	delete &scoreBoard;
+	delete &board;
+
+	return foundPlace && (resultZ || resultI || resultJ);
+}
+
+Coordinate BattleshipGameAlgo::_getBestGuess()
+{
+	vector<vector<vector<int>>> scoreBoard(this->playerBoard.depth, vector<vector<int>>(this->playerBoard.rows, vector<int>(this->playerBoard.cols)));
+	Coordinate bestCell(-1, -1, -1);
+	int bestScore = -1;
+
+	for (int z = 0; z < this->playerBoard.depth; z++)
+		for (int i = 0; i < this->playerBoard.rows; i++)
+			for (int j = 0; j < this->playerBoard.cols; j++) scoreBoard[z][i][j] = 0;
+
+	// Calculate score for each cell on the board according to how many ships
+	// could be placed there (and how much points those ships are worth). 
+	// Positioning ships under to the assumption that the opponent has the exact same ships as this player.
+	this->_placeNextShip(this->playerBoard.hostileShips, &this->playerBoard.board, &scoreBoard);
+
+	// Find highest scored cell
+	for (int z = 0; z < this->playerBoard.depth; z++)
+	{
+		for (int i = 0; i < this->playerBoard.rows; i++)
+		{
+			for (int j = 0; j < this->playerBoard.cols; j++)
+			{
+				if (scoreBoard[z][i][j] > bestScore)
+				{
+					bestScore = scoreBoard[z][i][j];
+					bestCell = _Coordinate(i, j ,z);
+				}
+			}
+		}
+	}
+
+	// safety
+	if (_canAttack(bestCell.depth - 1, bestCell.row - 1, bestCell.col - 1)) return bestCell;
+
+	// No more available moves
+	return Coordinate(-1, -1, -1);
+}
 
 void BattleshipGameAlgo::setBoard(const BoardData& board)
 {
@@ -80,67 +258,6 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 	for (auto const& cell : irrelevantCells)
 		this->_markIrrelevant(cell.row, cell.col, cell.depth);
 }
-
-// TODO - new _getBestGuess using hostileShips dict (try to fit all these exact ships on the board)
-
-Coordinate BattleshipGameAlgo::_getBestGuess() const
-{
-	/*vector<vector<int>> scoreBoard(this->playerBoard->R, vector<int>(this->playerBoard->C));
-	bool goodI, goodJ;
-	pair<int, int> bestCell;
-	int bestScore = -1;
-
-	for (int i = 0; i < this->playerBoard->R; i++)
-		for (int j = 0; j < this->playerBoard->C; j++) scoreBoard[i][j] = 0;
-
-	// Calculate score for each cell on the board according to how many ships
-	// could be placed there (and how much points those ships are worth)
-	for (char ship : shipsBySize)
-	{
-		for (int i = 0; i < this->playerBoard->R; i++)
-		{
-			for (int j = 0; j < this->playerBoard->C; j++)
-			{
-				if (this->_canAttack(i, j))
-				{
-					goodI = true;
-					goodJ = true;
-					for (int l = 1; l < getShipSize(ship); l++) // Verify there is room for the whole ship
-					{
-						if (!this->_canAttack(i + l, j)) goodI = false;
-						if (!this->_canAttack(i, j + l)) goodJ = false;
-					}
-					for (int l = 0; l < getShipSize(ship); l++) // Add ship's score to all relevant cells
-					{
-						if (goodI) scoreBoard[i + l][j] += getShipScore(ship);
-						if (goodJ && getShipSize(ship) > 1) scoreBoard[i][j + l] += getShipScore(ship); // Prevent double scoring for 1 cell ships
-					}
-				}
-			}
-		}
-	}
-
-	// Find highest scored cell
-	for (int i = 0; i < this->playerBoard->R; i++)
-	{
-		for (int j = 0; j < this->playerBoard->C; j++)
-		{
-			if (scoreBoard[i][j] > bestScore)
-			{
-				bestScore = scoreBoard[i][j];
-				bestCell = _make_pair(i, j);
-			}
-		}
-	}
-
-	if (_canAttack(bestCell.first - 1, bestCell.second - 1)) return bestCell;
-
-	// No more available moves (safety)
-	return make_pair(-1, -1);*/
-	return _Coordinate(0, 0, 0);
-}
-
-
 
 Coordinate BattleshipGameAlgo::attack()
 {
