@@ -53,6 +53,14 @@ struct Game
 
 };
 
+struct sortPlayersScoreByWinRate
+{
+	bool operator()(const std::pair<string, PlayerRoundScore> &left, const std::pair<string, PlayerRoundScore> &right)
+	{
+		return  left.second.winsRate > right.second.winsRate;
+	}
+};
+
 
 /*
 * check if the files below exist in the given path:
@@ -78,3 +86,7 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 int manageGames(vector<string> dllFiles, vector<string> dllNames, vector<string> sboardFiles, int threads);
 void GameThread(vector<shared_ptr<BattleBoard>> boards);
 void updateGameResult(GameResult result);
+bool isTournamentDone();
+void IncreaseGameCounter();
+void ReportResults();
+bool checkRound(int roundNumber);

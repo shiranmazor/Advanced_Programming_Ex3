@@ -2,11 +2,17 @@
 #include <memory>
 #include "BattleBoard.h"
 #include <thread>
+#include <iomanip>
+
+#define COLUMN_SPACE 15
+#define TEAM_NAME 60
 
 queue<Game> g_games;
 map<int, pair<GetAlgorithmFuncType, string>> g_playersAlgo;
 vector<PlayerScore> g_pScores;
+int g_gamesCounter;
 
+mutex g_gameCounter_mutex;
 mutex g_playersAlgo_mutex;
 mutex g_gamesQueue_mutex;
 mutex g_playerScore_mutex;
@@ -130,8 +136,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	//load dll's
 	vector<GetAlgorithmFuncType> algorithmFuncs;
 	vector<shared_ptr<BattleBoard>> boards;
-
-
+	g_gamesCounter = 0;
 
 	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
 		return -1;
@@ -151,7 +156,6 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 		i++;
 	}
 	
-
 	//create game combinations  in g_Games queue
 	calcGameCombinations(int(g_playersAlgo.size()), int(boards.size()));
 
@@ -167,7 +171,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 		thread_ptr = make_unique<thread>(GameThread, boards); // create and run the thread
 	}
 	//here call function that print the mid results for each round
-	
+	ReportResults();
 	
 	// ===> join all the threads to finish nicely 
 	for (auto& thread_ptr : threads) {
@@ -175,7 +179,77 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	}
 	//finish manage games release dlls
 	closeDLLs(dllLoaded);
+	return 0;
 
+}
+
+
+void ReportResults()
+{
+	int current_round = 1;
+
+	while(!isTournamentDone())//as long as the Tournament continue we want to check mid results and print them
+	{
+		//check if all players has done current round
+		if (checkRound(current_round))
+		{
+			//print game counter
+			lock_guard<std::mutex> lock2(g_gameCounter_mutex);
+			lock_guard<std::mutex> lock3(g_gamesQueue_mutex);
+			cout << "Games Played until now: " << g_gamesCounter << "/" << g_games.size() << endl;
+			//create vector<string,playerRoundScore>
+			vector<pair<string, PlayerRoundScore>> currentScores;
+			//create middle results object for all players
+			g_playerScore_mutex.lock();
+			for(auto ps: g_pScores)
+			{
+				currentScores.push_back(make_pair(ps.playerName, ps.rounds[current_round - 1]));
+				
+			}
+			g_playerScore_mutex.unlock();
+			//sort rounds by player win rate
+			sort(currentScores.begin(), currentScores.end(), sortPlayersScoreByWinRate());
+			
+			//print round results:
+			//first line
+			std::cout << std::setprecision(2) << std::fixed;
+			cout << setw(COLUMN_SPACE) << left << "#";
+			cout << setw(TEAM_NAME) << left << "Team Name";
+			cout << setw(COLUMN_SPACE) << left << "Wins";
+			cout << setw(COLUMN_SPACE) << left << "Losses";
+			cout << setw(COLUMN_SPACE) << left << "%";
+			cout << setw(COLUMN_SPACE) << left << "Pts For";
+			cout << setw(COLUMN_SPACE) << left << "Pts Againts" << endl;
+			int num = 0;
+			for (auto currScore: currentScores)
+			{
+				cout << setw(COLUMN_SPACE) << left << num << ".";
+				cout << setw(TEAM_NAME) << left << currScore.first;
+				cout << setw(COLUMN_SPACE) << left << currScore.second.wins;
+				cout << setw(COLUMN_SPACE) << left << currScore.second.losses;
+				cout << setw(COLUMN_SPACE) << left << currScore.second.winsRate;
+				cout << setw(COLUMN_SPACE) << left << currScore.second.pointsFor;
+				cout << setw(COLUMN_SPACE) << left << currScore.second.pointsAgainst << endl;
+				num++;
+			}
+			current_round++;
+		}
+		//end if
+		
+	}
+	 
+	
+}
+
+bool checkRound(int roundNumber)
+{
+	lock_guard<std::mutex> lock(g_playerScore_mutex);
+	for (auto pScor: g_pScores)
+	{
+		if (pScor.rounds.size() < roundNumber)
+			return false;
+	}
+	return true;
 }
 
 /*
@@ -217,6 +291,18 @@ Game getCurrentGame()
 	return currGame;	
 		
 }
+void IncreaseGameCounter()
+{
+	lock_guard<std::mutex> lock(g_gameCounter_mutex);
+	g_gamesCounter++;
+}
+
+bool isTournamentDone()
+{
+	lock_guard<std::mutex> lock1(g_gameCounter_mutex);
+	lock_guard<std::mutex> lock2(g_gamesQueue_mutex);
+	return g_gamesCounter == g_games.size();
+}
 
 /*
  * run in single thread and call playSingleGame
@@ -242,7 +328,7 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 	GameResult result = playSingleGame(playerA, playerB, gameBoard);
 	//update players scores with updateGameResult
 	updateGameResult(result);
-	
+	IncreaseGameCounter();
 
 }
 
@@ -250,6 +336,7 @@ void updateGameResult(GameResult result)
 {
 	bool pAWon = result.winPlayer == result.playerA ? true : false;
 	//find relevet playerA, playerB name from g_pScores, update his data
+
 	lock_guard<std::mutex> lock(g_playerScore_mutex);
 	int i = 0; 
 	int playerBIndex = 0; 
@@ -416,5 +503,6 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	//call manageGames
+	manageGames(dllFiles, dllNames, sboardFiles, threads);
 
 }
