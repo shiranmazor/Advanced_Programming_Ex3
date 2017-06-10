@@ -158,7 +158,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
 	//adjust threads number to the number of games
 	if (g_games.size() < threadsNum)
-		threadsNum = g_games.size();
+		threadsNum = static_cast<int>(g_games.size());
 
 	//run threads
 	for (auto& thread_ptr : threads)
