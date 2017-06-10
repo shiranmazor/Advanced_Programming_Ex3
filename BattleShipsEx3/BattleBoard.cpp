@@ -24,19 +24,19 @@
 /*
 * Recursively collect all adjacent cells containing the same symbol
 */
-void BattleBoard::_collect_ship(int z, int i, int j, set<Coordinate>* s)
+void BattleBoard::_collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s)
 {
 	char curr = this->board[z][i][j];
-	s->insert(Coordinate(i, j , z));
+	s->insert(make_tuple(i, j , z));
 
-	if (i + 1 < this->rows() && this->board[z][i + 1][j] == curr && s->find(Coordinate(i + 1, j, z)) == s->end()) _collect_ship(z, i + 1, j, s);
-	if (i > 0 && this->board[z][i - 1][j] == curr && s->find(Coordinate(i - 1, j, z)) == s->end()) _collect_ship(z, i - 1, j, s);
+	if (i + 1 < this->rows() && this->board[z][i + 1][j] == curr && s->find(make_tuple(i + 1, j, z)) == s->end()) _collect_ship(z, i + 1, j, s);
+	if (i > 0 && this->board[z][i - 1][j] == curr && s->find(make_tuple(i - 1, j, z)) == s->end()) _collect_ship(z, i - 1, j, s);
 	
-	if (j + 1 < this->cols() && this->board[z][i][j + 1] == curr && s->find(Coordinate(i, j + 1, z)) == s->end()) _collect_ship(z, i, j + 1, s);
-	if (j > 0 && this->board[z][i][j - 1] == curr && s->find(Coordinate(i, j - 1, z)) == s->end()) _collect_ship(z, i, j - 1, s);
+	if (j + 1 < this->cols() && this->board[z][i][j + 1] == curr && s->find(make_tuple(i, j + 1, z)) == s->end()) _collect_ship(z, i, j + 1, s);
+	if (j > 0 && this->board[z][i][j - 1] == curr && s->find(make_tuple(i, j - 1, z)) == s->end()) _collect_ship(z, i, j - 1, s);
 	
-	if (z + 1 < this->depth() && this->board[z + 1][i][j] == curr && s->find(Coordinate(i, j, z + 1)) == s->end()) _collect_ship(z + 1, i, j, s);
-	if (z > 0 && this->board[z - 1][i][j] == curr && s->find(Coordinate(i, j, z - 1)) == s->end()) _collect_ship(z - 1, i, j, s);
+	if (z + 1 < this->depth() && this->board[z + 1][i][j] == curr && s->find(make_tuple(i, j, z + 1)) == s->end()) _collect_ship(z + 1, i, j, s);
+	if (z > 0 && this->board[z - 1][i][j] == curr && s->find(make_tuple(i, j, z - 1)) == s->end()) _collect_ship(z - 1, i, j, s);
 
 	return;
 }
@@ -51,10 +51,10 @@ void BattleBoard::_collect_ship(int z, int i, int j, set<Coordinate>* s)
 */
 bool BattleBoard::isBoardValid(vector<string>& error_messages)
 {
-	int countA = 0;
-	int countB = 0;
+	//int countA = 0;
+	//int countB = 0;
 	int totalShape = 0;
-	set<Coordinate> checkedCells, temp;
+	set<tuple<int, int, int>> checkedCells, temp;
 	bool allI, allJ, allZ;
 	bool badShape[8] = {false};
 	bool tooClose = false;
@@ -67,7 +67,7 @@ bool BattleBoard::isBoardValid(vector<string>& error_messages)
 			for (int j = 0; j < this->cols(); j++)
 			{
 				// ignore empty or already checked boxes (in case of full ship scan)
-				if (this->board[z][i][j] == ' ' || checkedCells.find(Coordinate(i, j, z)) != checkedCells.end()) continue;
+				if (this->board[z][i][j] == ' ' || checkedCells.find(make_tuple(i, j, z)) != checkedCells.end()) continue;
 
 				// collect all adjacent cells contaning the same symbol
 				_collect_ship(z, i, j, &temp);
@@ -76,9 +76,9 @@ bool BattleBoard::isBoardValid(vector<string>& error_messages)
 				allZ = true;
 				for (auto const& element : temp)
 				{
-					allI = element.row == i && allI;
-					allJ = element.col == j && allJ;
-					allZ = element.depth == z && allZ;
+					allI = get<0>(element) == i && allI;
+					allJ = get<1>(element) == j && allJ;
+					allZ = get<2>(element) == z && allZ;
 				}
 
 				// determine ship shape and size
@@ -90,21 +90,22 @@ bool BattleBoard::isBoardValid(vector<string>& error_messages)
 				}
 				else // ship shape and size are correct
 				{
-					if (isPlayerChar(A, this->board[z][i][j])) countA++;
-					else countB++;
+					//if (isPlayerChar(A, this->board[z][i][j])) countA++;
+					//else countB++;
 
 					// add ship to the game board 'ships' Map and check for adjacent ships
 					currShip = make_shared<Vessel>(Vessel(this->board[z][i][j]));
 					for (auto const& element : temp)
 					{
 						checkedCells.insert(element);
-						this->ships[makeKey(element)] = currShip;
-						if ((element.row > 0 && this->board[element.depth][element.row - 1][element.col] != ' ' && this->board[element.depth][element.row - 1][element.col] != this->board[z][i][j]) ||
-							(element.col > 0 && this->board[element.depth][element.row][element.col - 1] != ' ' && this->board[element.depth][element.row][element.col - 1] != this->board[z][i][j]) ||
-							(element.depth > 0 && this->board[element.depth - 1][element.row][element.col] != ' ' && this->board[element.depth - 1][element.row][element.col] != this->board[z][i][j]) ||
-							(element.row < this->rows() - 1 && this->board[element.depth][element.row + 1][element.col] != ' ' && this->board[element.depth][element.row + 1][element.col] != this->board[z][i][j]) ||
-							(element.col < this->cols() - 1 && this->board[element.depth][element.row][element.col + 1] != ' ' && this->board[element.depth][element.row][element.col + 1] != this->board[z][i][j]) ||
-							(element.depth < this->depth() - 1 && this->board[element.depth + 1][element.row][element.col] != ' ' && this->board[element.depth + 1][element.row][element.col] != this->board[z][i][j]))
+						Coordinate cell(get<0>(element), get<1>(element), get<2>(element));
+						this->ships[makeKey(cell)] = currShip;
+						if ((cell.row > 0 && this->board[cell.depth][cell.row - 1][cell.col] != ' ' && this->board[cell.depth][cell.row - 1][cell.col] != this->board[z][i][j]) ||
+							(cell.col > 0 && this->board[cell.depth][cell.row][cell.col - 1] != ' ' && this->board[cell.depth][cell.row][cell.col - 1] != this->board[z][i][j]) ||
+							(cell.depth > 0 && this->board[cell.depth - 1][cell.row][cell.col] != ' ' && this->board[cell.depth - 1][cell.row][cell.col] != this->board[z][i][j]) ||
+							(cell.row < this->rows() - 1 && this->board[cell.depth][cell.row + 1][cell.col] != ' ' && this->board[cell.depth][cell.row + 1][cell.col] != this->board[z][i][j]) ||
+							(cell.col < this->cols() - 1 && this->board[cell.depth][cell.row][cell.col + 1] != ' ' && this->board[cell.depth][cell.row][cell.col + 1] != this->board[z][i][j]) ||
+							(cell.depth < this->depth() - 1 && this->board[cell.depth + 1][cell.row][cell.col] != ' ' && this->board[cell.depth + 1][cell.row][cell.col] != this->board[z][i][j]))
 						{
 							tooClose = true;
 						}
@@ -137,7 +138,7 @@ bool BattleBoard::isBoardValid(vector<string>& error_messages)
 	
 	// Assuming both players have same number of ships
 	//if (countA != countB) error_messages.push_back("Players have different number of ships on board");
-	this->playerToolsNum = countA;
+	//this->playerToolsNum = countA;
 
 	if (tooClose) error_messages.push_back("Adjacent Ships on Board");
 
@@ -167,19 +168,24 @@ pair<int, int> BattleBoard::CalcScore()
 int BattleBoard::CheckVictory()
 {
 	int winner(-1);
-	int countA(0), countB(0);
+	int countA(0), countB(0), sinkA(0), sinkB(0);
 	set<shared_ptr<Vessel>> seenVessels;
 
 	for (auto const& element : this->ships)
-		if (element.second->size <= element.second->hitNum && seenVessels.find(element.second) == seenVessels.end())
+		if (seenVessels.find(element.second) == seenVessels.end())
 		{
 			seenVessels.insert(element.second);
 			if (element.second->player == A) countA++;
 			else countB++;
+			if (element.second->size <= element.second->hitNum)
+			{
+				if (element.second->player == A) sinkA++;
+				else sinkB++;
+			}
 		}
 
-	if (countA == this->playerToolsNum) winner = B;
-	else if (countB == this->playerToolsNum) winner = A;
+	if (countA == sinkA) winner = B;
+	else if (countB == sinkB) winner = A;
 
 	return winner;
 }

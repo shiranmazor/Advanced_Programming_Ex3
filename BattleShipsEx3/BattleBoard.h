@@ -19,7 +19,7 @@ using namespace std;
 #define isOppChar(x, y) ((x==A && islower(y)) || (x==B && isupper(y)))
 #define HitMarkA '*'
 #define HitMarkB '#'
-#define makeKey(x) (to_string(x.row) + '_' + to_string(x.col) + '_' + to_string(x.depth))
+#define makeKey(x) (to_string(x.row) + ' ' + to_string(x.col) + ' ' + to_string(x.depth))
 #define isAlreadyHit(x) (x == '*' || x == '#')
 
 const char idx2ship[8] = { 'B', 'P', 'M', 'D', 'b', 'p', 'm', 'd' };
@@ -50,7 +50,7 @@ class BattleBoard : public BoardData
 {
 public:
 	vector<vector<vector<char>>> board;
-	int playerToolsNum;
+	//int playerToolsNum;
 	unordered_map<string, shared_ptr<Vessel>> ships;
 
 	// Blocking Assignment
@@ -58,7 +58,7 @@ public:
 	BattleBoard& operator = (const BattleBoard&) = delete;
 
 	// constructor
-	BattleBoard(string boardFilePath) : playerToolsNum(0)
+	BattleBoard(string boardFilePath) //: playerToolsNum(0)
 	{
 		ifstream boardFile(boardFilePath); //here assuming board file exist!
 		string line;
@@ -103,7 +103,9 @@ public:
 					if (!isCharValid(this->board[z][i][j])) this->board[z][i][j] = ' ';
 	}
 
-	BattleBoard(const BattleBoard& b) : board(b.board), playerToolsNum(b.playerToolsNum), ships(b.ships)
+	// Copy ctor
+	//BattleBoard(const BattleBoard& b) : board(b.board), playerToolsNum(b.playerToolsNum), ships(b.ships)
+	BattleBoard(const BattleBoard& b) : board(b.board), ships(b.ships)
 	{
 		this->_cols = b.cols();
 		this->_rows = b.rows();
@@ -122,9 +124,9 @@ public:
 	int CheckVictory();
 	BattleBoard BattleBoard::getPlayerBoard(Player player) const;
 	AttackResult performGameMove(int p, Coordinate move);
-	virtual char charAt(Coordinate c) const  override;
+	virtual char charAt(Coordinate c) const override;
 
 private:
 	//int _getShipDirection(int z, int i, int j);
-	void _collect_ship(int z, int i, int j, set<Coordinate>* s);
+	void _collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s);
 };
