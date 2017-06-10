@@ -63,7 +63,7 @@ public:
 		string line;
 
 		getline(boardFile, line);
-		if (regex_match(line, regex("\d+x\d+x\d+")))
+		if (regex_match(line, regex("\\d+x\\d+x\\d+")))
 		{
 			stringstream s(regex_replace(line, regex("x"), " "));
 			s >> this->_cols >> this->_rows >> this->_depth;
