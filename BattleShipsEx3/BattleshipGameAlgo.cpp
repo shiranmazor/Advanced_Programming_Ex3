@@ -22,7 +22,7 @@ bool BattleshipGameAlgo::_canAttack(int z, int i, int j) const
 }
 
 // Has optional arg for board, if not sent updates this->playerBoard
-void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth, vector<vector<vector<char>>>* _board = nullptr)
+void BattleshipGameAlgo::_markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>* _board = nullptr)
 {
 	if (row >= 0 && row < this->playerBoard.rows &&
 		col >= 0 && col < this->playerBoard.cols &&
@@ -32,11 +32,11 @@ void BattleshipGameAlgo::_markIrrelevant(int row, int col, int depth, vector<vec
 		{
 			// create refrence for vector pointers
 			vector<vector<vector<char>>> &board = *_board;
-			board[row][col][depth] = irrelevnatCell;
+			board[depth][row][col] = irrelevnatCell;
 			// delete refrence
 			delete &board;
 		}
-		else this->playerBoard.board[row][col][depth] = irrelevnatCell;
+		else this->playerBoard.board[depth][row][col] = irrelevnatCell;
 	}
 }
 
@@ -176,7 +176,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 Coordinate BattleshipGameAlgo::_getBestGuess()
 {
 	vector<vector<vector<int>>> scoreBoard(this->playerBoard.depth, vector<vector<int>>(this->playerBoard.rows, vector<int>(this->playerBoard.cols)));
-	Coordinate bestCell(-1, -1, -1);
+	Coordinate bestCell = Coordinate(-1, -1, -1);
 	int bestScore = -1;
 
 	for (int z = 0; z < this->playerBoard.depth; z++)
@@ -236,7 +236,7 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 
 	for (char c : shipsBySize) this->playerBoard.hostileShips[c] = this->playerBoard.hostileShips[c] / getShipSize(c);
 
-	set<Coordinate> irrelevantCells;
+	set<tuple<int, int, int>> irrelevantCells;
 	for (int z = 0; z < this->playerBoard.depth; z++)
 	{
 		for (int i = 0; i < this->playerBoard.rows; i++)
@@ -245,18 +245,18 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 			{
 				if (this->playerBoard.board[z][i][j] != ' ')
 				{
-					if (i + 1 < this->playerBoard.rows && this->playerBoard.board[z][i + 1][j] == ' ') irrelevantCells.insert(Coordinate(z, i + 1, j));
-					if (i > 0 && this->playerBoard.board[z][i - 1][j] == ' ') irrelevantCells.insert(Coordinate(z, i - 1, j));
-					if (j + 1 < this->playerBoard.cols && this->playerBoard.board[z][i][j + 1] == ' ') irrelevantCells.insert(Coordinate(z, i, j + 1));
-					if (j > 0 && this->playerBoard.board[z][i][j - 1] == ' ') irrelevantCells.insert(Coordinate(z, i, j - 1));
-					if (z + 1 < this->playerBoard.depth && this->playerBoard.board[z + 1][i][j] == ' ') irrelevantCells.insert(Coordinate(z + 1, i, j));
-					if (z > 0 && this->playerBoard.board[z - 1][i][j] == ' ') irrelevantCells.insert(Coordinate(z - 1, i, j));
+					if (i + 1 < this->playerBoard.rows && this->playerBoard.board[z][i + 1][j] == ' ') irrelevantCells.insert(make_tuple(z, i + 1, j));
+					if (i > 0 && this->playerBoard.board[z][i - 1][j] == ' ') irrelevantCells.insert(make_tuple(z, i - 1, j));
+					if (j + 1 < this->playerBoard.cols && this->playerBoard.board[z][i][j + 1] == ' ') irrelevantCells.insert(make_tuple(z, i, j + 1));
+					if (j > 0 && this->playerBoard.board[z][i][j - 1] == ' ') irrelevantCells.insert(make_tuple(z, i, j - 1));
+					if (z + 1 < this->playerBoard.depth && this->playerBoard.board[z + 1][i][j] == ' ') irrelevantCells.insert(make_tuple(z + 1, i, j));
+					if (z > 0 && this->playerBoard.board[z - 1][i][j] == ' ') irrelevantCells.insert(make_tuple(z - 1, i, j));
 				}
 			}
 		}
 	}
 	for (auto const& cell : irrelevantCells)
-		this->_markIrrelevant(cell.row, cell.col, cell.depth);
+		this->_markIrrelevant(get<0>(cell), get<1>(cell), get<2>(cell));
 }
 
 Coordinate BattleshipGameAlgo::attack()
@@ -353,7 +353,7 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 		int col = fitMove.col;
 		int depth = fitMove.depth;
 
-		this->_markIrrelevant(row, col, depth);
+		this->_markIrrelevant(depth ,row, col);
 
 		switch (result) {
 		case AttackResult::Miss:
@@ -382,25 +382,25 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 					this->target->newEdges[1] = Coordinate(row, col, depth);
 					if (this->target->newEdges[0].row == this->target->newEdges[1].row) {
 						this->target->direction = 1;
-						this->_markIrrelevant(this->target->newEdges[0].row + 1, this->target->newEdges[0].col, target->newEdges[0].depth - 1);
-						this->_markIrrelevant(this->target->newEdges[0].row - 1, this->target->newEdges[0].col, target->newEdges[0].depth + 1);
-						this->_markIrrelevant(this->target->newEdges[0].row + 1, this->target->newEdges[0].col, target->newEdges[0].depth + 1);
-						this->_markIrrelevant(this->target->newEdges[0].row - 1, this->target->newEdges[0].col, target->newEdges[0].depth - 1);
+						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
+						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
+						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
+						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
 					}
 					else if (this->target->newEdges[0].col == this->target->newEdges[1].col)
 					{
 						this->target->direction = 2;
-						this->_markIrrelevant(this->target->newEdges[0].row, this->target->newEdges[0].col + 1, target->newEdges[0].depth + 1);
-						this->_markIrrelevant(this->target->newEdges[0].row, this->target->newEdges[0].col - 1, target->newEdges[0].depth + 1);
-						this->_markIrrelevant(this->target->newEdges[0].row, this->target->newEdges[0].col + 1, target->newEdges[0].depth - 1);
-						this->_markIrrelevant(this->target->newEdges[0].row, this->target->newEdges[0].col - 1, target->newEdges[0].depth - 1);
+						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
+						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
+						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
+						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
 					}
 					else {
 						this->target->direction = 3;
-						this->_markIrrelevant(this->target->newEdges[0].row + 1, this->target->newEdges[0].col + 1, target->newEdges[0].depth);
-						this->_markIrrelevant(this->target->newEdges[0].row + 1, this->target->newEdges[0].col - 1, target->newEdges[0].depth);
-						this->_markIrrelevant(this->target->newEdges[0].row - 1, this->target->newEdges[0].col + 1, target->newEdges[0].depth);
-						this->_markIrrelevant(this->target->newEdges[0].row - 1, this->target->newEdges[0].col - 1, target->newEdges[0].depth);
+						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col + 1);
+						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col - 1);
+						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col + 1);
+						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col - 1);
 
 					}
 				}
@@ -415,23 +415,23 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 				// mark current cell's surrounding cells as irrelevant according to direction
 				if (this->target->direction == 1)
 				{
-					this->_markIrrelevant(row + 1, col, depth + 1);
-					this->_markIrrelevant(row - 1, col, depth + 1);
-					this->_markIrrelevant(row + 1, col, depth - 1);
-					this->_markIrrelevant(row - 1, col, depth - 1);
+					this->_markIrrelevant(depth + 1, row + 1, col);
+					this->_markIrrelevant(depth + 1, row - 1, col);
+					this->_markIrrelevant(depth - 1, row + 1, col);
+					this->_markIrrelevant(depth - 1, row - 1, col);
 				}
 				else if (this->target->direction == 2)
 				{
-					this->_markIrrelevant(row, col + 1, depth + 1);
-					this->_markIrrelevant(row, col - 1, depth + 1);
-					this->_markIrrelevant(row, col + 1, depth - 1);
-					this->_markIrrelevant(row, col - 1, depth - 1);
+					this->_markIrrelevant(depth + 1, row, col + 1);
+					this->_markIrrelevant(depth + 1, row, col - 1);
+					this->_markIrrelevant(depth - 1, row, col + 1);
+					this->_markIrrelevant(depth - 1, row, col - 1);
 				}
 				else {
-					this->_markIrrelevant(row + 1, col + 1, depth);
-					this->_markIrrelevant(row + 1, col - 1, depth);
-					this->_markIrrelevant(row - 1, col + 1, depth);
-					this->_markIrrelevant(row - 1, col - 1, depth);
+					this->_markIrrelevant(depth, row + 1, col + 1);
+					this->_markIrrelevant(depth, row + 1, col - 1);
+					this->_markIrrelevant(depth, row - 1, col + 1);
+					this->_markIrrelevant(depth, row - 1, col - 1);
 				}
 
 				this->target->hitCount++;
@@ -439,18 +439,18 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 			break;
 		case AttackResult::Sink:
 			// mark surrounding cells as irrelevant (last hit, can add all directions)
-			this->_markIrrelevant(row + 1, col, depth + 1);
-			this->_markIrrelevant(row - 1, col, depth + 1);
-			this->_markIrrelevant(row + 1, col, depth - 1);
-			this->_markIrrelevant(row - 1, col, depth - 1);
-			this->_markIrrelevant(row, col + 1, depth + 1);
-			this->_markIrrelevant(row, col - 1, depth + 1);
-			this->_markIrrelevant(row, col + 1, depth - 1);
-			this->_markIrrelevant(row, col - 1, depth - 1);
-			this->_markIrrelevant(row + 1, col + 1, depth);
-			this->_markIrrelevant(row + 1, col - 1, depth);
-			this->_markIrrelevant(row - 1, col + 1, depth);
-			this->_markIrrelevant(row - 1, col - 1, depth);
+			this->_markIrrelevant(depth + 1, row + 1, col);
+			this->_markIrrelevant(depth + 1, row - 1, col);
+			this->_markIrrelevant(depth - 1, row + 1, col);
+			this->_markIrrelevant(depth - 1, row - 1, col);
+			this->_markIrrelevant(depth + 1, row, col + 1);
+			this->_markIrrelevant(depth + 1, row, col - 1);
+			this->_markIrrelevant(depth - 1, row, col + 1);
+			this->_markIrrelevant(depth - 1, row, col - 1);
+			this->_markIrrelevant(depth, row + 1, col + 1);
+			this->_markIrrelevant(depth, row + 1, col - 1);
+			this->_markIrrelevant(depth, row - 1, col + 1);
+			this->_markIrrelevant(depth, row - 1, col - 1);
 
 			this->playerBoard.hostileShips[getShipBySize(this->target->hitCount + 1)]--;
 
