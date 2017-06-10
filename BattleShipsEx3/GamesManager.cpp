@@ -468,15 +468,23 @@ int main(int argc, char **argv)
 	//setup defult parameters
 	_getcwd(the_path, 255);
 	path = std::string(the_path);
-	map<string, string> configMap = getConfigParams(path);
-	threads = stoi(configMap["threads"]);
-
+	map<string, string> configMap;
+	
 	//reading params from command line
 	int i = 1; //first item is the name of the program
 	while (i < argc)
 	{
 		if (i == 1)//path is apearing only in the first item
+		{
 			path = argv[i];
+			if (!dirExists(path))
+			{
+				std::cout << "Wrong path:" + path << endl;
+				return -1;
+			}
+			configMap = getConfigParams(path);
+			threads = stoi(configMap["threads"]);//set default threade number
+		}
 		else
 		{
 			if (strcmp(argv[i], "-threads") == 0)
@@ -486,11 +494,6 @@ int main(int argc, char **argv)
 			}
 		}
 		i++;
-	}
-	if (!dirExists(path))
-	{
-		std::cout << "Wrong path:" + path << endl;
-		return -1;
 	}
 	//done reading params, get game files
 	getGameFiles(path, sboardFiles, dllFiles, dllNames);
