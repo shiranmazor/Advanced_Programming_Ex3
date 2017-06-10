@@ -76,8 +76,10 @@ public:
 		}
 		getline(boardFile, line);
 
+		this->board = vector<vector<vector<char>>>(this->_depth);
 		for (int z = 0; z < this->_depth; z++)
 		{
+			this->board[z] = vector<vector<char>>(this->_rows);
 			for (int i = 0; i < this->_rows; i++)
 			{
 				getline(boardFile, line);
