@@ -205,3 +205,16 @@ AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 	return AttackResult::Miss;
 }
 
+void BattleBoard::debug_print_board()
+{
+	for (int z = 0; z < this->depth(); z++)
+	{
+		cout << "depth " << z << "\n\n";
+		for (int i = 0; i < this->rows(); i++)
+		{
+			for (int j = 0; j < this->cols(); j++)
+				cout << this->board[z][i][j];
+			cout << endl;
+		}
+	}
+}

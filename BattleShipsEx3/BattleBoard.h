@@ -100,6 +100,8 @@ public:
 			for (int i = 0; i < this->_rows; i++)
 				for (int j = 0; j < this->_cols; j++)
 					if (!isCharValid(this->board[z][i][j])) this->board[z][i][j] = ' ';
+
+		this->debug_print_board();
 	}
 
 	// Copy ctor
@@ -126,4 +128,5 @@ public:
 
 private:
 	void _collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s);
+	void debug_print_board();
 };
