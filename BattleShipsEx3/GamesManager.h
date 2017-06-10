@@ -12,6 +12,8 @@
 #include <tuple>
 #include <windows.h>
 #include "BattleBoard.h"
+#include <queue>
+#include "PlayerScore.h"
 
 using namespace std;
 
@@ -40,22 +42,15 @@ public:
 	{}
 
 };
-class PlayerBalance
+struct Game
 {
-public:
-	string playerName;
-	int wins;
-	int losses;
-	float winsRate;
-	int gamesCounter;
-	int pointsGained;
-	int pointsAgainst;
+	 int gameNumber;
+	 int boardNumber;
+	 int playerANumber;
+	 int playerBNumber;
+	 Game(int gameNum, int boardNum, int playerANum, int playerBNum) :gameNumber(gameNum), boardNumber(boardNum),
+		 playerANumber(playerANum), playerBNumber(playerBNum){}
 
-	PlayerBalance(string name) :wins(0), losses(0), winsRate(0), gamesCounter(0), pointsGained(0), pointsAgainst(0)
-	{
-		this->playerName = name;
-	}
-	~PlayerBalance() = default;
 };
 
 
@@ -66,23 +61,20 @@ public:
 */
 bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path, vector<string>& error_messages);
 void closeDLLs(vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>> & dll_vec);
-void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles);
+void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles, vector<string>& dllNames);
 
 /*
 load algorithms and board file for one game
 */
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
 	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards);
-map<int, tuple<int, int, int>> getGameCombinations(int playersNum, int boardsNumber);
+void  calcGameCombinations(int playersNum, int boardsNumber);
 
 IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
 	IBattleshipGameAlgo* pB, int currentName);
 
-/*
-call load dll and init game 
-create players
-create boardgame instace and check validity of the board
-*/
-GameResult playSingleGame(pair<string, string> dllNames, GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
-	BattleBoard* board);
-int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads);
+GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
+	shared_ptr<BattleBoard> board);
+int manageGames(vector<string> dllFiles, vector<string> dllNames, vector<string> sboardFiles, int threads);
+void GameThread(vector<shared_ptr<BattleBoard>> boards);
+void updateGameResult(GameResult result);

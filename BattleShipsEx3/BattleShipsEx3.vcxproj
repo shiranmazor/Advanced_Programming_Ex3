@@ -112,9 +112,11 @@
   <ItemGroup>
     <ClInclude Include="GamesManager.h" />
     <ClInclude Include="IBattleshipGameAlgo.h" />
+    <ClInclude Include="PlayerScore.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GamesManager.cpp" />
+    <ClCompile Include="PlayerScore.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

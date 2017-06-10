@@ -5,7 +5,7 @@
 
 IBattleshipGameAlgo* GetAlgorithm()
 {
-	return new BattleshipGameAlgo();
+	return  new BattleshipGameAlgo();
 }
 
 void BattleshipGameAlgo::setPlayer(int player)
