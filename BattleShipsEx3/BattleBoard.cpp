@@ -213,7 +213,7 @@ void BattleBoard::debug_print_board()
 		for (int i = 0; i < this->rows(); i++)
 		{
 			for (int j = 0; j < this->cols(); j++)
-				cout << this->board[z][i][j];
+				cout << this->board[z][i][j] << "|";
 			cout << endl;
 		}
 	}
