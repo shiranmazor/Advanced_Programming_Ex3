@@ -50,7 +50,6 @@ class BattleBoard : public BoardData
 {
 public:
 	vector<vector<vector<char>>> board;
-	//int playerToolsNum;
 	unordered_map<string, shared_ptr<Vessel>> ships;
 
 	// Blocking Assignment
@@ -58,7 +57,7 @@ public:
 	BattleBoard& operator = (const BattleBoard&) = delete;
 
 	// constructor
-	BattleBoard(string boardFilePath) //: playerToolsNum(0)
+	BattleBoard(string boardFilePath)
 	{
 		ifstream boardFile(boardFilePath); //here assuming board file exist!
 		string line;
@@ -104,7 +103,6 @@ public:
 	}
 
 	// Copy ctor
-	//BattleBoard(const BattleBoard& b) : board(b.board), playerToolsNum(b.playerToolsNum), ships(b.ships)
 	BattleBoard(const BattleBoard& b) : board(b.board), ships(b.ships)
 	{
 		this->_cols = b.cols();
@@ -127,6 +125,5 @@ public:
 	virtual char charAt(Coordinate c) const override;
 
 private:
-	//int _getShipDirection(int z, int i, int j);
 	void _collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s);
 };
