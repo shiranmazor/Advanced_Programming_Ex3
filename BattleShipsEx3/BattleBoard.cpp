@@ -1,27 +1,6 @@
 #include "BattleBoard.h"
 
 /*
-* 	Board validation assisting function, returns:
-*	0 - no direction (ship size 1 or adjecent ships error)
-*	1 - going right
-*	2 - going down
-*	3 - going in (deep)
-*/
-//int BattleBoard::_getShipDirection(int z, int i, int j)
-//{
-//	if (j != this->cols() - 1 && this->board[z][i][j + 1] == this->board[z][i][j])
-//		return 1;
-//	
-//	if (i != this->rows() - 1 && this->board[z][i + 1][j] == this->board[z][i][j])
-//		return 2;
-//	
-//	if (z != this->depth() - 1 && this->board[z + 1][i][j] == this->board[z][i][j])
-//		return 3;
-//
-//	return 0;
-//}
-
-/*
 * Recursively collect all adjacent cells containing the same symbol
 */
 void BattleBoard::_collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s)
@@ -40,9 +19,6 @@ void BattleBoard::_collect_ship(int z, int i, int j, set<tuple<int, int, int>>* 
 
 	return;
 }
-
-
-
 
 /*
 *  Check if the board is valid and print relevant messages if it isn't,
@@ -131,18 +107,11 @@ bool BattleBoard::isBoardValid(vector<string>& error_messages)
 		totalShape += badShape[i];
 	}
 
-	//if (countA > this->playerToolsNum) error_messages.push_back("Too many ships for player A");
-	//if (countA < this->playerToolsNum) error_messages.push_back("Too few ships for player A");
-	//if (countB > this->playerToolsNum) error_messages.push_back("Too many ships for player B");
-	//if (countB < this->playerToolsNum) error_messages.push_back("Too few ships for player B");
-	
 	// Assuming both players have same number of ships
 	//if (countA != countB) error_messages.push_back("Players have different number of ships on board");
-	//this->playerToolsNum = countA;
 
 	if (tooClose) error_messages.push_back("Adjacent Ships on Board");
 
-	//return (countA == this->playerToolsNum && countB == this->playerToolsNum && !tooClose && totalShape == 0);
 	return (!tooClose && totalShape == 0);
 }
 
@@ -236,3 +205,16 @@ AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 	return AttackResult::Miss;
 }
 
+void BattleBoard::debug_print_board()
+{
+	for (int z = 0; z < this->depth(); z++)
+	{
+		cout << "depth " << z << "\n\n";
+		for (int i = 0; i < this->rows(); i++)
+		{
+			for (int j = 0; j < this->cols(); j++)
+				cout << this->board[z][i][j];
+			cout << endl;
+		}
+	}
+}

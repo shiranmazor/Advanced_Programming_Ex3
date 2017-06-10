@@ -50,7 +50,6 @@ class BattleBoard : public BoardData
 {
 public:
 	vector<vector<vector<char>>> board;
-	//int playerToolsNum;
 	unordered_map<string, shared_ptr<Vessel>> ships;
 
 	// Blocking Assignment
@@ -58,13 +57,13 @@ public:
 	BattleBoard& operator = (const BattleBoard&) = delete;
 
 	// constructor
-	BattleBoard(string boardFilePath) //: playerToolsNum(0)
+	BattleBoard(string boardFilePath)
 	{
 		ifstream boardFile(boardFilePath); //here assuming board file exist!
 		string line;
 
 		getline(boardFile, line);
-		if (regex_match(line, regex("\d+x\d+x\d+")))
+		if (regex_match(line, regex("\\d+x\\d+x\\d+")))
 		{
 			stringstream s(regex_replace(line, regex("x"), " "));
 			s >> this->_cols >> this->_rows >> this->_depth;
@@ -101,10 +100,11 @@ public:
 			for (int i = 0; i < this->_rows; i++)
 				for (int j = 0; j < this->_cols; j++)
 					if (!isCharValid(this->board[z][i][j])) this->board[z][i][j] = ' ';
+
+		this->debug_print_board();
 	}
 
 	// Copy ctor
-	//BattleBoard(const BattleBoard& b) : board(b.board), playerToolsNum(b.playerToolsNum), ships(b.ships)
 	BattleBoard(const BattleBoard& b) : board(b.board), ships(b.ships)
 	{
 		this->_cols = b.cols();
@@ -127,6 +127,6 @@ public:
 	virtual char charAt(Coordinate c) const override;
 
 private:
-	//int _getShipDirection(int z, int i, int j);
 	void _collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s);
+	void debug_print_board();
 };

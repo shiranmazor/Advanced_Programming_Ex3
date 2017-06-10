@@ -21,8 +21,7 @@ public:
 	* 2 - going down
 	* 3 - going in(deep) */
 	int edgeReached = -1;
-	//pair<int, int> edges[2];
-	Coordinate newEdges[2] = { Coordinate(-1, -1, -1), Coordinate(-1, -1, -1) };
+	Coordinate edges[2] = { Coordinate(-1, -1, -1), Coordinate(-1, -1, -1) };
 	int hitCount = 0;
 };
 
@@ -42,9 +41,6 @@ public:
 	int playerNum;
 	PlayerBoard playerBoard;
 	targetVessel* target = nullptr;
-	//int hostileShipsNum = -1;
-	//unordered_map<char, int> hostileShips = { { 'd', 0 },{ 'm', 0 },{ 'p', 0 },{ 'b', 0 } };
-	//vector<vector<vector<char>>> playerBoard;
 	
 	// Blocking Copy and Assignment
 	BattleshipGameAlgo(const BattleshipGameAlgo&) = delete;

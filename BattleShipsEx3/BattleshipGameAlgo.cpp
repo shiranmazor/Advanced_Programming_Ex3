@@ -268,30 +268,30 @@ Coordinate BattleshipGameAlgo::attack()
 	// target mode - targeting a specific ship
 	if (this->target->direction < 1) // don't know direction or no direction
 	{
-		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
-		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
-		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
-		if (this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1)) return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
-		if (this->_canAttack(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col);
-		if (this->_canAttack(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col)) return _Coordinate(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col);
+		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col);
+		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col);
+		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1);
+		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1);
+		if (this->_canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col);
+		if (this->_canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col);
 	}
 	if (this->target->direction == 1) // horizontal
 	{
 		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
 		{
-			if (this->target->newEdges[0].col > this->target->newEdges[1].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
-			if (this->target->newEdges[0].col < this->target->newEdges[1].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
+			if (this->target->edges[0].col > this->target->edges[1].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1);
+			if (this->target->edges[0].col < this->target->edges[1].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
 		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
 		{
-			if (this->target->newEdges[1].col > this->target->newEdges[0].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col + 1))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col + 1);
-			if (this->target->newEdges[1].col < this->target->newEdges[0].col && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col - 1))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row, this->target->newEdges[1].col - 1);
+			if (this->target->edges[1].col > this->target->edges[0].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col + 1))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col + 1);
+			if (this->target->edges[1].col < this->target->edges[0].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col - 1))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col - 1);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 1;
 		}
@@ -300,19 +300,19 @@ Coordinate BattleshipGameAlgo::attack()
 	{
 		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
 		{
-			if (this->target->newEdges[0].row > this->target->newEdges[1].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
-			if (this->target->newEdges[0].row < this->target->newEdges[1].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col - 1);
+			if (this->target->edges[0].row > this->target->edges[1].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col);
+			if (this->target->edges[0].row < this->target->edges[1].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col - 1);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
 		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
 		{
-			if (this->target->newEdges[1].row > this->target->newEdges[0].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row + 1, this->target->newEdges[1].col))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row + 1, this->target->newEdges[1].col);
-			if (this->target->newEdges[1].row < this->target->newEdges[0].row && this->_canAttack(this->target->newEdges[0].depth, this->target->newEdges[1].row - 1, this->target->newEdges[1].col))
-				return _Coordinate(this->target->newEdges[0].depth, this->target->newEdges[1].row - 1, this->target->newEdges[1].col);
+			if (this->target->edges[1].row > this->target->edges[0].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row + 1, this->target->edges[1].col))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row + 1, this->target->edges[1].col);
+			if (this->target->edges[1].row < this->target->edges[0].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row - 1, this->target->edges[1].col))
+				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row - 1, this->target->edges[1].col);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 1;
 		}
@@ -321,19 +321,19 @@ Coordinate BattleshipGameAlgo::attack()
 	{
 		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
 		{
-			if (this->target->newEdges[0].depth > this->target->newEdges[1].depth && this->_canAttack(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col))
-				return _Coordinate(this->target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col);
-			if (this->target->newEdges[0].depth < this->target->newEdges[1].depth && this->_canAttack(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col))
-				return _Coordinate(this->target->newEdges[0].depth - 1, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
+			if (this->target->edges[0].depth > this->target->edges[1].depth && this->_canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col);
+			if (this->target->edges[0].depth < this->target->edges[1].depth && this->_canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].depth - 1, this->target->edges[0].row - 1, this->target->edges[0].col);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
 		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
 		{
-			if (this->target->newEdges[1].depth > this->target->newEdges[0].depth && this->_canAttack(this->target->newEdges[1].depth + 1, this->target->newEdges[1].row, this->target->newEdges[0].col))
-				return _Coordinate(this->target->newEdges[1].depth + 1, this->target->newEdges[1].row, this->target->newEdges[0].col);
-			if (this->target->newEdges[1].depth < this->target->newEdges[0].depth && this->_canAttack(this->target->newEdges[1].depth - 1, this->target->newEdges[1].row, this->target->newEdges[0].col))
-				return _Coordinate(this->target->newEdges[1].depth - 1, this->target->newEdges[1].row, this->target->newEdges[0].col);
+			if (this->target->edges[1].depth > this->target->edges[0].depth && this->_canAttack(this->target->edges[1].depth + 1, this->target->edges[1].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[1].depth + 1, this->target->edges[1].row, this->target->edges[0].col);
+			if (this->target->edges[1].depth < this->target->edges[0].depth && this->_canAttack(this->target->edges[1].depth - 1, this->target->edges[1].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[1].depth - 1, this->target->edges[1].row, this->target->edges[0].col);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 1;
 		}
@@ -358,58 +358,58 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 		switch (result) {
 		case AttackResult::Miss:
 			if (this->target != nullptr) {
-				if (this->target->direction == 1 && (col == this->target->newEdges[0].col + 1 || col == this->target->newEdges[0].col - 1)) this->target->edgeReached = 0;
-				if (this->target->direction == 1 && (col == this->target->newEdges[1].col + 1 || col == this->target->newEdges[1].col - 1)) this->target->edgeReached = 1;
-				if (this->target->direction == 2 && (row == this->target->newEdges[0].row + 1 || row == this->target->newEdges[0].row - 1)) this->target->edgeReached = 0;
-				if (this->target->direction == 2 && (row == this->target->newEdges[1].row + 1 || row == this->target->newEdges[1].row - 1)) this->target->edgeReached = 1;
-				if (this->target->direction == 3 && (depth == this->target->newEdges[0].depth + 1 || depth == this->target->newEdges[0].depth - 1)) this->target->edgeReached = 0;
-				if (this->target->direction == 3 && (depth == this->target->newEdges[1].depth + 1 || depth == this->target->newEdges[1].depth - 1)) this->target->edgeReached = 1;
+				if (this->target->direction == 1 && (col == this->target->edges[0].col + 1 || col == this->target->edges[0].col - 1)) this->target->edgeReached = 0;
+				if (this->target->direction == 1 && (col == this->target->edges[1].col + 1 || col == this->target->edges[1].col - 1)) this->target->edgeReached = 1;
+				if (this->target->direction == 2 && (row == this->target->edges[0].row + 1 || row == this->target->edges[0].row - 1)) this->target->edgeReached = 0;
+				if (this->target->direction == 2 && (row == this->target->edges[1].row + 1 || row == this->target->edges[1].row - 1)) this->target->edgeReached = 1;
+				if (this->target->direction == 3 && (depth == this->target->edges[0].depth + 1 || depth == this->target->edges[0].depth - 1)) this->target->edgeReached = 0;
+				if (this->target->direction == 3 && (depth == this->target->edges[1].depth + 1 || depth == this->target->edges[1].depth - 1)) this->target->edgeReached = 1;
 			}
 			break;
 		case AttackResult::Hit:
 			if (this->target == nullptr)
 			{
 				this->target = new targetVessel();
-				this->target->newEdges[0] = Coordinate(row, col, depth);
-				//this->target->newEdges[1] = Coordinate(-1, -1, -1);
+				this->target->edges[0] = Coordinate(row, col, depth);
+				//this->target->edges[1] = Coordinate(-1, -1, -1);
 			}
 			else
 			{
-				if (this->target->newEdges[1].row == -1 && 
-					this->target->newEdges[1].col == -1 && 
-					this->target->newEdges[1].depth == -1)
+				if (this->target->edges[1].row == -1 && 
+					this->target->edges[1].col == -1 && 
+					this->target->edges[1].depth == -1)
 				{
-					this->target->newEdges[1] = Coordinate(row, col, depth);
-					if (this->target->newEdges[0].row == this->target->newEdges[1].row) {
+					this->target->edges[1] = Coordinate(row, col, depth);
+					if (this->target->edges[0].row == this->target->edges[1].row) {
 						this->target->direction = 1;
-						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
-						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
-						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row + 1, this->target->newEdges[0].col);
-						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row - 1, this->target->newEdges[0].col);
+						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row + 1, this->target->edges[0].col);
+						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row - 1, this->target->edges[0].col);
+						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row + 1, this->target->edges[0].col);
+						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row - 1, this->target->edges[0].col);
 					}
-					else if (this->target->newEdges[0].col == this->target->newEdges[1].col)
+					else if (this->target->edges[0].col == this->target->edges[1].col)
 					{
 						this->target->direction = 2;
-						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
-						this->_markIrrelevant(target->newEdges[0].depth + 1, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
-						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col + 1);
-						this->_markIrrelevant(target->newEdges[0].depth - 1, this->target->newEdges[0].row, this->target->newEdges[0].col - 1);
+						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col + 1);
+						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col - 1);
+						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col + 1);
+						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col - 1);
 					}
 					else {
 						this->target->direction = 3;
-						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col + 1);
-						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row + 1, this->target->newEdges[0].col - 1);
-						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col + 1);
-						this->_markIrrelevant(target->newEdges[0].depth, this->target->newEdges[0].row - 1, this->target->newEdges[0].col - 1);
+						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col + 1);
+						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col - 1);
+						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col + 1);
+						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col - 1);
 
 					}
 				}
 				else
 				{
-					if (abs(this->target->newEdges[1].row - row) + abs(this->target->newEdges[1].col - col) + abs(this->target->newEdges[1].depth - depth) == 1) // one cell away from edge[1]
-						this->target->newEdges[1] = Coordinate(row, col, depth);
+					if (abs(this->target->edges[1].row - row) + abs(this->target->edges[1].col - col) + abs(this->target->edges[1].depth - depth) == 1) // one cell away from edge[1]
+						this->target->edges[1] = Coordinate(row, col, depth);
 					else
-						this->target->newEdges[0] = Coordinate(row, col, depth);
+						this->target->edges[0] = Coordinate(row, col, depth);
 				}
 
 				// mark current cell's surrounding cells as irrelevant according to direction
