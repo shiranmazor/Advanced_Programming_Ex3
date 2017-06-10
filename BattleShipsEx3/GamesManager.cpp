@@ -3,6 +3,13 @@
 #include "BattleBoard.h"
 #include <thread>
 
+queue<Game> g_games;
+map<int, pair<GetAlgorithmFuncType, string>> g_playersAlgo;
+vector<PlayerScore> g_pScores;
+
+mutex g_playersAlgo_mutex;
+mutex g_gamesQueue_mutex;
+mutex g_playerScore_mutex;
 
 void closeDLLs(vector<HINSTANCE> dlls)
 {
@@ -27,7 +34,7 @@ game files are:
 .sboard files (can be multiple)
 *.dll files (can be multiple)
 */
-void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles)
+void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles, vector<string>& dllNames)
 {
 	WIN32_FIND_DATAA search_data;
 	HANDLE handle;
@@ -69,6 +76,7 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 				//found sboard file
 				string fullPath = folder + "\\" + filename;
 				dllFiles.push_back(fullPath);
+				dllNames.push_back(filename);
 			}
 		} while (FindNextFileA(handle, &search_data));
 
@@ -115,34 +123,56 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	return true;
 }
 
-int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads)
+int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> sboardFiles, int threadsNum)
 {
-	vector<thread> gameThreads;
+	vector<unique_ptr<thread>> threads(threadsNum);
 	vector<HINSTANCE> dllLoaded;
 	//load dll's
 	vector<GetAlgorithmFuncType> algorithmFuncs;
 	vector<shared_ptr<BattleBoard>> boards;
-	map<int, pair<GetAlgorithmFuncType,string>> playersAlgo;
+
+
 
 	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
 		return -1;
+
+	//print number of legal players and number of legal boards
+	cout << "Number of legal players: <" << algorithmFuncs.size() << ">" << endl;
+	cout << "Number of legal boards: <" << boards.size() << ">" << endl;
 
 	//first create a map of player unique number to algo name
 	int i = 0;
 	for (auto algo : algorithmFuncs)
 	{
-		playersAlgo[i] = make_pair(algo, dllFiles[i]);
+		g_playersAlgo[i] = make_pair(algo, dllNames[i]);
+		//create players score  for each player
+		PlayerScore p(dllNames[i], i);
+		g_pScores.push_back(p);
 		i++;
 	}
+	
 
-	//create game combinations 
-	map<int, tuple<int, int, int>> gamesMap = getGameCombinations(int(playersAlgo.size()), int(boards.size()));
-	//create games queue
-	
-	
-	
-		
+	//create game combinations  in g_Games queue
+	calcGameCombinations(int(g_playersAlgo.size()), int(boards.size()));
 
+	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
+	//adjust threads number to the number of games
+	if (g_games.size() < threadsNum)
+		threadsNum = static_cast<int>(g_games.size());
+
+	//run threads
+	for (auto& thread_ptr : threads)
+	{
+		//create the threads and run them
+		thread_ptr = make_unique<thread>(GameThread, boards); // create and run the thread
+	}
+	//here call function that print the mid results for each round
+	
+	
+	// ===> join all the threads to finish nicely 
+	for (auto& thread_ptr : threads) {
+		thread_ptr->join();
+	}
 	//finish manage games release dlls
 	closeDLLs(dllLoaded);
 
@@ -152,9 +182,8 @@ int manageGames(vector<string> dllFiles, vector<string> sboardFiles, int threads
  *calculate the game rounds and attach players number to each game
  *return games map < gameNumber(int), value = tuple(board num, playerA number, player B number)>
  */
-map<int, tuple<int, int, int>> getGameCombinations(int playersNum, int boardsNumber)
+void  calcGameCombinations(int playersNum, int boardsNumber)
 {
-	map<int, tuple<int, int, int>> gamesMap;
 	int gamesCounter = 1;
 	//calc all players permutations
 	vector<pair<int, int>> playersPermutations = PairesPermGenerator(playersNum);
@@ -165,28 +194,107 @@ map<int, tuple<int, int, int>> getGameCombinations(int playersNum, int boardsNum
 		
 		for(auto permutation: playersPermutations)
 		{
-			gamesMap[gamesCounter] = make_tuple(boardNum, permutation.first, permutation.second);
+			Game gameObj(gamesCounter, boardNum, permutation.first, permutation.second);
+			g_games.push(gameObj);
 			gamesCounter++;
 		}
 
 	}
-	return gamesMap;
 }
 /*
  *playSingleGame : dllNames include playerA dll name and playerB dll name
  */
-GameResult playSingleGame(pair<string,string> dllNames,GetAlgorithmFuncType algorithmFuncs1, GetAlgorithmFuncType algorithmFuncs2,
-	BattleBoard* board)
+
+Game getCurrentGame()
+{
+	Game g(-1, -1, -1, -1);
+	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
+	if (g_games.empty())
+		return g;
+
+	Game currGame = g_games.front();
+	g_games.pop();
+	return currGame;	
+		
+}
+
+/*
+ * run in single thread and call playSingleGame
+ * update gameResults
+ * 
+ */
+void GameThread(vector<shared_ptr<BattleBoard>> boards)
+{
+	//get unique next current Game obj from queue
+	Game currentGame = getCurrentGame();
+
+	//check if games is over
+	if (currentGame.gameNumber == -1)
+		return;
+	//build new game objects
+	//create game board
+	shared_ptr<BattleBoard> gameBoard = boards[currentGame.boardNumber];
+	g_playersAlgo_mutex.lock();
+	pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
+	pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
+	g_playersAlgo_mutex.unlock();
+
+	GameResult result = playSingleGame(playerA, playerB, gameBoard);
+	//update players scores with updateGameResult
+	updateGameResult(result);
+	
+
+}
+
+void updateGameResult(GameResult result)
+{
+	bool pAWon = result.winPlayer == result.playerA ? true : false;
+	//find relevet playerA, playerB name from g_pScores, update his data
+	lock_guard<std::mutex> lock(g_playerScore_mutex);
+	int i = 0; 
+	int playerBIndex = 0; 
+	int playerAIndex = 0;
+	while (i < g_pScores.size())
+	{
+		if (g_pScores[i].playerName == result.playerA)
+			playerAIndex = i;
+		if (g_pScores[i].playerName == result.playerB)
+			playerBIndex = i;
+		i++;
+	}
+	//let's update scores
+	
+	if (pAWon)
+	{
+		//A:
+		g_pScores[playerAIndex].UpdateScore(true, result.playerAScore, result.playerBScore);
+		//B:
+		g_pScores[playerBIndex].UpdateScore(false, result.playerBScore, result.playerAScore);
+	}
+	else
+	{
+		//A:
+		g_pScores[playerAIndex].UpdateScore(false, result.playerAScore, result.playerBScore);
+		//B:
+		g_pScores[playerBIndex].UpdateScore(true, result.playerBScore, result.playerAScore);
+	}
+
+}
+
+
+
+
+GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
+	shared_ptr<BattleBoard> board)
 {
 	//create players instance
-	unique_ptr<IBattleshipGameAlgo> playerA(algorithmFuncs1());
-	unique_ptr<IBattleshipGameAlgo> playerB(algorithmFuncs2());
-	GameResult result(get<0>(dllNames), get<1>(dllNames));
+	unique_ptr<IBattleshipGameAlgo> playerA(playerAPair.first());
+	unique_ptr<IBattleshipGameAlgo> playerB(playerBPair.first());
+	GameResult result(playerAPair.second, playerBPair.second);
 
 	playerA->setPlayer(A);
 	playerB->setPlayer(B);
 	
-	//Todo: check for any potential memory leak in this lines after implement set board
 	playerA->setBoard(board->getPlayerBoard(A));
 	playerA->setBoard(board->getPlayerBoard(B));
 
@@ -224,12 +332,7 @@ GameResult playSingleGame(pair<string,string> dllNames,GetAlgorithmFuncType algo
 			}
 			continue;
 		}
-		/*
-		 *else if //check if attack move coordinate is bad
-		{
-				
-		}
-		 */
+
 		AttackResult moveRes = board->performGameMove(currentPlayer, attackMove);
 		//notify both players on the moveAttak results
 		playerA->notifyOnAttackResult(currentPlayer, attackMove, moveRes);
@@ -243,7 +346,6 @@ GameResult playSingleGame(pair<string,string> dllNames,GetAlgorithmFuncType algo
 		}
 
 		// if Miss or self hit next turn is of the other player.
-
 		if (moveRes == AttackResult::Miss || (moveRes != AttackResult::Miss &&
 			isSelfHit(currentPlayer, board->charAt(attackMove)))
 		{
@@ -272,6 +374,7 @@ int main(int argc, char **argv)
 	vector<string> error_messages;
 	vector<string> sboardFiles;
 	vector<string> dllFiles;
+	vector<string> dllNames;
 	vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>>  dll_vec;
 	char the_path[256];
 
@@ -303,7 +406,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	//done reading params, get game files
-	getGameFiles(path, sboardFiles, dllFiles);
+	getGameFiles(path, sboardFiles, dllFiles, dllNames);
+
 	if (!CheckExistingGameFiles(dllFiles, sboardFiles, path, error_messages))
 	{
 		//output error messages
@@ -311,5 +415,6 @@ int main(int argc, char **argv)
 			cout << error_messages[i] << endl;
 		return -1;
 	}
+	//call manageGames
 
 }
