@@ -45,7 +45,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 	unordered_map<char, int> nextHostileShips(hostileShips);
 	char ship = ' ';
 	bool goodZ, goodI, goodJ, resultZ = false, resultI = false, resultJ = false, foundPlace = false;
-	vector<vector<vector<char>>> tempBoard;
+	
 	
 	for (auto const& shipCounter : hostileShips)
 		if (shipCounter.second > 0)
@@ -61,6 +61,8 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 	// create refrences for vector pointers
 	vector<vector<vector<int>>> &scoreBoard = *_scoreBoard;
 	vector<vector<vector<char>>> &board = *_board;
+
+	vector<vector<vector<char>>>tempBoard(board);
 	for (int z = 0; z < this->playerBoard.depth; z++)
 	{
 		for (int i = 0; i < this->playerBoard.rows; i++)
@@ -83,9 +85,13 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodZ)
 				{
 					// init temp board
-					for (int z = 0; z < this->playerBoard.depth; z++)
+					/*
+					 *for (int z = 0; z < this->playerBoard.depth; z++)
 						for (int i = 0; i < this->playerBoard.rows; i++)
-							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
+							for (int j = 0; j < this->playerBoard.cols; j++) 
+								tempBoard[z][i][j] = board[z][i][j];
+					 */
+					
 
 					// Mark surrounding cells irrelevant
 					for (int l = 0; l < getShipSize(ship); l++)
@@ -111,9 +117,12 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodI)
 				{
 					// init temp board
-					for (int z = 0; z < this->playerBoard.depth; z++)
+					/*
+					 *for (int z = 0; z < this->playerBoard.depth; z++)
 						for (int i = 0; i < this->playerBoard.rows; i++)
 							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
+					 */
+					
 
 					// Add ship's score to relevant cells and mark surrounding cells irrelevant
 					for (int l = 0; l < getShipSize(ship); l++)
@@ -138,9 +147,12 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodJ)
 				{
 					// init temp board
-					for (int z = 0; z < this->playerBoard.depth; z++)
+					/*
+					 *for (int z = 0; z < this->playerBoard.depth; z++)
 						for (int i = 0; i < this->playerBoard.rows; i++)
 							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
+					 */
+					
 
 					// Add ship's score to relevant cells and mark surrounding cells irrelevant
 					for (int l = 0; l < getShipSize(ship); l++)
