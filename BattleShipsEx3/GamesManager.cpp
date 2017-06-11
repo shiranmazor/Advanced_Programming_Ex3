@@ -376,7 +376,7 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	playerB->setPlayer(B);
 	
 	playerA->setBoard(board->getPlayerBoard(A));
-	playerA->setBoard(board->getPlayerBoard(B));
+	playerB->setBoard(board->getPlayerBoard(B));
 
 	//we starts with player A
 	Coordinate attackMove(1, 1, 1);
@@ -388,14 +388,13 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 
 	while (!victory)
 	{
-		//set current player board
-		if (currentPlayer == A)
+		if (currentPlayer == B)
 		{
-			attackMove = playerA->attack();
+			attackMove = playerB->attack();
 		}
 		else
 		{
-			attackMove = playerB->attack();
+			attackMove = playerA->attack();
 		}
 			
 		//check if attack is over:
