@@ -16,6 +16,7 @@ mutex g_gameCounter_mutex;
 mutex g_playersAlgo_mutex;
 mutex g_gamesQueue_mutex;
 mutex g_playerScore_mutex;
+std::condition_variable g_cond;
 
 void closeDLLs(vector<HINSTANCE> dlls)
 {
@@ -142,14 +143,14 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 		return -1;
 
 	//print number of legal players and number of legal boards
-	cout << "Number of legal players: <" << algorithmFuncs.size() << ">" << endl;
-	cout << "Number of legal boards: <" << boards.size() << ">" << endl;
+	cout << "Number of legal players: " << algorithmFuncs.size() << endl;
+	cout << "Number of legal boards: " << boards.size()  << endl;
 
 	//first create a map of player unique number to algo name
 	int i = 0;
 	for (auto algo : algorithmFuncs)
 	{
-		g_playersAlgo[i] = make_pair(algo, dllNames[i]);
+		g_playersAlgo[i+1] = make_pair(algo, dllNames[i]);
 		//create players score  for each player
 		PlayerScore p(dllNames[i], i);
 		g_pScores.push_back(p);
@@ -159,7 +160,6 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	//create game combinations  in g_Games queue
 	calcGameCombinations(int(g_playersAlgo.size()), int(boards.size()));
 
-	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
 	//adjust threads number to the number of games
 	if (g_games.size() < threadsNum)
 		threadsNum = static_cast<int>(g_games.size());
@@ -194,19 +194,15 @@ void ReportResults()
 		if (checkRound(current_round))
 		{
 			//print game counter
-			lock_guard<std::mutex> lock2(g_gameCounter_mutex);
-			lock_guard<std::mutex> lock3(g_gamesQueue_mutex);
 			cout << "Games Played until now: " << g_gamesCounter << "/" << g_games.size() << endl;
 			//create vector<string,playerRoundScore>
 			vector<pair<string, PlayerRoundScore>> currentScores;
 			//create middle results object for all players
-			g_playerScore_mutex.lock();
 			for(auto ps: g_pScores)
 			{
 				currentScores.push_back(make_pair(ps.playerName, ps.rounds[current_round - 1]));
 				
 			}
-			g_playerScore_mutex.unlock();
 			//sort rounds by player win rate
 			sort(currentScores.begin(), currentScores.end(), sortPlayersScoreByWinRate());
 			
@@ -237,13 +233,10 @@ void ReportResults()
 		//end if
 		
 	}
-	 
-	
 }
 
 bool checkRound(int roundNumber)
 {
-	lock_guard<std::mutex> lock(g_playerScore_mutex);
 	for (auto pScor: g_pScores)
 	{
 		if (pScor.rounds.size() < roundNumber)
@@ -282,10 +275,11 @@ void  calcGameCombinations(int playersNum, int boardsNumber)
 Game getCurrentGame()
 {
 	Game g(-1, -1, -1, -1);
-	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
+	
 	if (g_games.empty())
 		return g;
 
+	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
 	Game currGame = g_games.front();
 	g_games.pop();
 	return currGame;	
@@ -299,8 +293,6 @@ void IncreaseGameCounter()
 
 bool isTournamentDone()
 {
-	lock_guard<std::mutex> lock1(g_gameCounter_mutex);
-	lock_guard<std::mutex> lock2(g_gamesQueue_mutex);
 	return g_gamesCounter == g_games.size();
 }
 
@@ -319,7 +311,7 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 		return;
 	//build new game objects
 	//create game board
-	shared_ptr<BattleBoard> gameBoard = boards[currentGame.boardNumber];
+	shared_ptr<BattleBoard> gameBoard = boards[currentGame.boardNumber-1];
 	g_playersAlgo_mutex.lock();
 	pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
 	pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
@@ -329,6 +321,7 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 	//update players scores with updateGameResult
 	updateGameResult(result);
 	IncreaseGameCounter();
+	//notify
 
 }
 
@@ -386,19 +379,25 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	playerA->setBoard(board->getPlayerBoard(B));
 
 	//we starts with player A
+	Coordinate attackMove(1, 1, 1);
 	Player currentPlayer = A;
 	int onePlayerName = -1;
 	bool onePlayerGame = false; 
 	bool victory = false; int winPlayer = 2;
-	Coordinate attackMove(0, 0, 0);
+	
 
 	while (!victory)
 	{
 		//set current player board
 		if (currentPlayer == A)
+		{
 			attackMove = playerA->attack();
+		}
 		else
-			attackMove = playerA->attack();
+		{
+			attackMove = playerB->attack();
+		}
+			
 		//check if attack is over:
 		if (attackMove.col == -1 && attackMove.depth == -1 && attackMove.row == -1)
 		{
@@ -466,7 +465,7 @@ int main(int argc, char **argv)
 	char the_path[256];
 
 	//setup defult parameters
-	_getcwd(the_path, 255);
+	_getcwd(the_path, 1024);
 	path = std::string(the_path);
 	map<string, string> configMap;
 	
@@ -507,5 +506,6 @@ int main(int argc, char **argv)
 	}
 	//call manageGames
 	manageGames(dllFiles, dllNames, sboardFiles, threads);
+	return 0;
 
 }
