@@ -96,6 +96,7 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	 vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards)
 {
 	vector<string>  errors;
+	vector<string>  boardErrors;
 	//load dll's
 	HINSTANCE hDll;
 	for (auto dll : dllfiles)
@@ -112,11 +113,12 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	}
 	if (algorithmFuncs.size() == 0)
 		errors.push_back("Error: Faild to load all DLL's! no dll for Game Manager, Exising!");
+
 	//load files, create battleBoard instance and check validity
 	for(auto boardF: sboardfiles)
 	{
 		shared_ptr<BattleBoard> board = make_shared<BattleBoard>(boardF);
-		if (board->isBoardValid(errors))
+		if (board->isBoardValid(boardErrors))
 			boards.push_back(board);
 	}
 	if (boards.size() == 0)
@@ -234,9 +236,6 @@ void ReportResults()
 				cout << setw(TEAM_NAME) << left << currScore.first;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.wins;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.losses;
-				//calc win rate:
-				//double total = currScore.second.wins + currScore.second.losses;
-				//double  winRate = static_cast<double>(currScore.second.wins) / total;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.winRate;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.pointsFor;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.pointsAgainst << endl;
@@ -344,7 +343,6 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 		IncreaseGameCounter();
 		
 	}
-	
 
 }
 
@@ -364,21 +362,11 @@ void updateGameResult(GameResult result)
 	}
 	//let's update scores
 	lock_guard<std::mutex> lock(g_playerScore_mutex);
-	if (result.winPlayer == 0)//A won
-	{
-		//A:
-		g_pScores[playerAIndex].UpdateScore(true, result.playerAScore, result.playerBScore);
-		//B:
-		g_pScores[playerBIndex].UpdateScore(false, result.playerBScore, result.playerAScore);
-	}
-	else
-	{
-		//A:
-		g_pScores[playerAIndex].UpdateScore(false, result.playerAScore, result.playerBScore);
-		//B:
-		g_pScores[playerBIndex].UpdateScore(true, result.playerBScore, result.playerAScore);
-	}
-
+	//A:
+	g_pScores[playerAIndex].UpdateScore(result.winPlayer == 0, result.playerAScore, result.playerBScore);
+	//B:
+	g_pScores[playerBIndex].UpdateScore(result.winPlayer == 1, result.playerBScore, result.playerAScore);
+	
 }
 
 
@@ -450,9 +438,9 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 			break;
 		}
 
-		// if Miss or self hit next turn is of the other player.
+		// if Miss or self hit next turn is of the other player. in case there are 2  players
 		if (moveRes == AttackResult::Miss || (moveRes != AttackResult::Miss &&
-			isSelfHit(currentPlayer, board->charAt(attackMove)))
+			isSelfHit(currentPlayer, board->charAt(attackMove)) && !onePlayerGame)
 		{
 			currentPlayer = currentPlayer == A ? B : A;//swap
 		}
