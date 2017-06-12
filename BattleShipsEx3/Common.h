@@ -16,7 +16,7 @@
 #define MySinkMark '!'
 #define OpSinkMark '?'
 
-#define _Coordinate(z, x, y) Coordinate(z + 1, x + 1, y + 1)
+#define _Coordinate(x, y, z) Coordinate(x + 1, y + 1, z + 1)
 
 enum Player { A, B };
 using namespace std;

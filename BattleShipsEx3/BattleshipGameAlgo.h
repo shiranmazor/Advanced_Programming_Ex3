@@ -63,8 +63,10 @@ public:
 	virtual void notifyOnAttackResult(int player, Coordinate move, AttackResult result)  override;
 
 private:
-	void _markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>* _board);
+	void _markIrrelevant(int depth, int row, int col);
+	void _markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>& board) const;
 	bool _canAttack(int z, int i, int j) const;
+	bool _canAttack(int z, int i, int j, vector<vector<vector<char>>>& board) const;
 	Coordinate _getBestGuess();
-	bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>* _board, vector<vector<vector<int>>>* _scoreBoard);
+	bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard) const;
 };
