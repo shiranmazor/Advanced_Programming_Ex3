@@ -37,8 +37,8 @@ public:
 	string playerB;
 	int playerAScore;
 	int playerBScore;
-	string winPlayer;
-	GameResult(string playerA, string playerB):playerAScore(0),playerBScore(0)
+	int winPlayer;
+	GameResult(string playerAS, string playerBS):playerA(playerAS), playerB(playerBS),playerAScore(0),playerBScore(0)
 	{}
 
 };
@@ -57,7 +57,7 @@ struct sortPlayersScoreByWinRate
 {
 	bool operator()(const std::pair<string, PlayerRoundScore> &left, const std::pair<string, PlayerRoundScore> &right)
 	{
-		return  left.second.winsRate > right.second.winsRate;
+		return  left.second.winRate > right.second.winRate;
 	}
 };
 

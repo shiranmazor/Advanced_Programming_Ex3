@@ -9,20 +9,21 @@ class PlayerRoundScore
 public:
 	unsigned int wins;
 	unsigned int losses;
-	double winsRate;
-	double lossRate;
 	int pointsFor;
 	int pointsAgainst;
+	double winRate;
 
-	PlayerRoundScore():wins(0), losses(0), winsRate(0), lossRate(0),
+	PlayerRoundScore():wins(0), losses(0), winRate(0),
 		 pointsFor(0), pointsAgainst(0){}
 
-	PlayerRoundScore(const PlayerRoundScore& p):lossRate(0), winsRate(0)
+	PlayerRoundScore(const PlayerRoundScore& p)
 	{
 		wins = p.wins;
 		losses = p.losses;
 		pointsFor = p.pointsFor;
 		pointsAgainst = p.pointsAgainst;
+		winRate = p.winRate;
+		
 	}
 	~PlayerRoundScore() = default;
 };

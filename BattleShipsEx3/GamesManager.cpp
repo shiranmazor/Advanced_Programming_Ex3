@@ -4,13 +4,15 @@
 #include <thread>
 #include <iomanip>
 
-#define COLUMN_SPACE 15
-#define TEAM_NAME 60
+#define COLUMN_SPACE 8
+#define TEAM_NAME 45
 
 queue<Game> g_games;
 map<int, pair<GetAlgorithmFuncType, string>> g_playersAlgo;
 vector<PlayerScore> g_pScores;
 int g_gamesCounter;
+int g_total_games_size;
+int g_each_player_games_num;
 
 mutex g_gameCounter_mutex;
 mutex g_playersAlgo_mutex;
@@ -94,6 +96,7 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	 vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards)
 {
 	vector<string>  errors;
+	vector<string>  boardErrors;
 	//load dll's
 	HINSTANCE hDll;
 	for (auto dll : dllfiles)
@@ -110,11 +113,12 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	}
 	if (algorithmFuncs.size() == 0)
 		errors.push_back("Error: Faild to load all DLL's! no dll for Game Manager, Exising!");
+
 	//load files, create battleBoard instance and check validity
 	for(auto boardF: sboardfiles)
 	{
 		shared_ptr<BattleBoard> board = make_shared<BattleBoard>(boardF);
-		if (board->isBoardValid(errors))
+		if (board->isBoardValid(boardErrors))
 			boards.push_back(board);
 	}
 	if (boards.size() == 0)
@@ -188,21 +192,29 @@ void ReportResults()
 {
 	int current_round = 1;
 
-	while(!isTournamentDone())//as long as the Tournament continue we want to check mid results and print them
+	while(current_round <= g_each_player_games_num)//as long as the Tournament continue we want to check mid results and print them
 	{
 		//check if all players has done current round
 		if (checkRound(current_round))
 		{
+			cout << "Current Round " << current_round << endl;
 			//print game counter
-			cout << "Games Played until now: " << g_gamesCounter << "/" << g_games.size() << endl;
+			g_gameCounter_mutex.lock();
+			g_playerScore_mutex.lock();
+			std::cout << endl;
+			std::cout << "---- Games Played until now (these results): " << g_gamesCounter << "/" << g_total_games_size << endl;
+			std::cout << endl;
 			//create vector<string,playerRoundScore>
 			vector<pair<string, PlayerRoundScore>> currentScores;
 			//create middle results object for all players
+			
 			for(auto ps: g_pScores)
 			{
 				currentScores.push_back(make_pair(ps.playerName, ps.rounds[current_round - 1]));
 				
 			}
+			g_playerScore_mutex.unlock();
+			g_gameCounter_mutex.unlock();
 			//sort rounds by player win rate
 			sort(currentScores.begin(), currentScores.end(), sortPlayersScoreByWinRate());
 			
@@ -216,19 +228,22 @@ void ReportResults()
 			cout << setw(COLUMN_SPACE) << left << "%";
 			cout << setw(COLUMN_SPACE) << left << "Pts For";
 			cout << setw(COLUMN_SPACE) << left << "Pts Againts" << endl;
-			int num = 0;
+			int num = 1;
 			for (auto currScore: currentScores)
 			{
-				cout << setw(COLUMN_SPACE) << left << num << ".";
+				string curr_num = std::to_string(num) + ".";
+				cout << setw(COLUMN_SPACE) << left << curr_num;
 				cout << setw(TEAM_NAME) << left << currScore.first;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.wins;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.losses;
-				cout << setw(COLUMN_SPACE) << left << currScore.second.winsRate;
+				cout << setw(COLUMN_SPACE) << left << currScore.second.winRate;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.pointsFor;
 				cout << setw(COLUMN_SPACE) << left << currScore.second.pointsAgainst << endl;
 				num++;
 			}
+			//only if round happend continue to next round
 			current_round++;
+			
 		}
 		//end if
 		
@@ -237,6 +252,7 @@ void ReportResults()
 
 bool checkRound(int roundNumber)
 {
+	lock_guard<std::mutex> lock(g_playerScore_mutex);
 	for (auto pScor: g_pScores)
 	{
 		if (pScor.rounds.size() < roundNumber)
@@ -251,6 +267,7 @@ bool checkRound(int roundNumber)
  */
 void  calcGameCombinations(int playersNum, int boardsNumber)
 {
+	g_each_player_games_num = 2 * boardsNumber* (playersNum - 1);
 	int gamesCounter = 1;
 	//calc all players permutations
 	vector<pair<int, int>> playersPermutations = PairesPermGenerator(playersNum);
@@ -267,6 +284,7 @@ void  calcGameCombinations(int playersNum, int boardsNumber)
 		}
 
 	}
+	g_total_games_size = gamesCounter-1;
 }
 /*
  *playSingleGame : dllNames include playerA dll name and playerB dll name
@@ -293,7 +311,7 @@ void IncreaseGameCounter()
 
 bool isTournamentDone()
 {
-	return g_gamesCounter == g_games.size();
+	return g_gamesCounter == g_total_games_size;
 }
 
 /*
@@ -304,33 +322,33 @@ bool isTournamentDone()
 void GameThread(vector<shared_ptr<BattleBoard>> boards)
 {
 	//get unique next current Game obj from queue
-	Game currentGame = getCurrentGame();
+	while(!isTournamentDone())
+	{
+		Game currentGame = getCurrentGame();
 
-	//check if games is over
-	if (currentGame.gameNumber == -1)
-		return;
-	//build new game objects
-	//create game board
-	shared_ptr<BattleBoard> gameBoard = boards[currentGame.boardNumber-1];
-	g_playersAlgo_mutex.lock();
-	pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
-	pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
-	g_playersAlgo_mutex.unlock();
+		//check if games is over
+		if (currentGame.gameNumber == -1)
+			return;
+		//build new game objects
+		//create game board
+		shared_ptr<BattleBoard> gameBoard = boards[currentGame.boardNumber - 1];
+		g_playersAlgo_mutex.lock();
+		pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
+		pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
+		g_playersAlgo_mutex.unlock();
 
-	GameResult result = playSingleGame(playerA, playerB, gameBoard);
-	//update players scores with updateGameResult
-	updateGameResult(result);
-	IncreaseGameCounter();
-	//notify
+		GameResult result = playSingleGame(playerA, playerB, gameBoard);
+		//update players scores with updateGameResult
+		updateGameResult(result);
+		IncreaseGameCounter();
+		
+	}
 
 }
 
 void updateGameResult(GameResult result)
-{
-	bool pAWon = result.winPlayer == result.playerA ? true : false;
+{	
 	//find relevet playerA, playerB name from g_pScores, update his data
-
-	lock_guard<std::mutex> lock(g_playerScore_mutex);
 	int i = 0; 
 	int playerBIndex = 0; 
 	int playerAIndex = 0;
@@ -343,22 +361,12 @@ void updateGameResult(GameResult result)
 		i++;
 	}
 	//let's update scores
+	lock_guard<std::mutex> lock(g_playerScore_mutex);
+	//A:
+	g_pScores[playerAIndex].UpdateScore(result.winPlayer == 0, result.playerAScore, result.playerBScore);
+	//B:
+	g_pScores[playerBIndex].UpdateScore(result.winPlayer == 1, result.playerBScore, result.playerAScore);
 	
-	if (pAWon)
-	{
-		//A:
-		g_pScores[playerAIndex].UpdateScore(true, result.playerAScore, result.playerBScore);
-		//B:
-		g_pScores[playerBIndex].UpdateScore(false, result.playerBScore, result.playerAScore);
-	}
-	else
-	{
-		//A:
-		g_pScores[playerAIndex].UpdateScore(false, result.playerAScore, result.playerBScore);
-		//B:
-		g_pScores[playerBIndex].UpdateScore(true, result.playerBScore, result.playerAScore);
-	}
-
 }
 
 
@@ -370,7 +378,7 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	//create players instance
 	unique_ptr<IBattleshipGameAlgo> playerA(playerAPair.first());
 	unique_ptr<IBattleshipGameAlgo> playerB(playerBPair.first());
-	GameResult result(playerAPair.second, playerBPair.second);
+	
 
 	playerA->setPlayer(A);
 	playerB->setPlayer(B);
@@ -383,7 +391,7 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	Player currentPlayer = A;
 	int onePlayerName = -1;
 	bool onePlayerGame = false; 
-	bool victory = false; int winPlayer = 2;
+	bool victory = false; int	winPlayer = 2;
 	
 
 	while (!victory)
@@ -430,22 +438,24 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 			break;
 		}
 
-		// if Miss or self hit next turn is of the other player.
+		// if Miss or self hit next turn is of the other player. in case there are 2  players
 		if (moveRes == AttackResult::Miss || (moveRes != AttackResult::Miss &&
-			isSelfHit(currentPlayer, board->charAt(attackMove)))
+			isSelfHit(currentPlayer, board->charAt(attackMove)) && !onePlayerGame)
 		{
 			currentPlayer = currentPlayer == A ? B : A;//swap
 		}
 	}
 	//outside game loop
 	pair<int, int> gameScore = board->CalcScore();
+
+	GameResult result(playerAPair.second, playerBPair.second);
 	//check victory:
 	if (victory)
 	{
 		result.winPlayer = winPlayer;
 	}
-	result.playerAScore = get<0>(gameScore);
-	result.playerBScore = get<1>(gameScore);
+	result.playerAScore = gameScore.first;
+	result.playerBScore = gameScore.second;
 	return result;
 }
 
