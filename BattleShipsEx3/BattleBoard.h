@@ -103,7 +103,7 @@ public:
 				for (int j = 0; j < this->_cols; j++)
 					if (!isCharValid(this->board[z][i][j])) this->board[z][i][j] = ' ';
 
-		this->debug_print_board();
+		//this->debug_print_board();
 	}
 
 	// Copy ctor

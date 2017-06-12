@@ -21,31 +21,41 @@ bool BattleshipGameAlgo::_canAttack(int z, int i, int j) const
 			this->playerBoard.board[z][i][j] == ' ');
 }
 
-// Has optional arg for board, if not sent updates this->playerBoard
-void BattleshipGameAlgo::_markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>* _board = nullptr)
+bool BattleshipGameAlgo::_canAttack(int z, int i, int j, vector<vector<vector<char>>>& board) const
+{
+	return (i >= 0 && i < this->playerBoard.rows &&
+		j >= 0 && j < this->playerBoard.cols &&
+		z >= 0 && z < this->playerBoard.depth &&
+		board[z][i][j] == ' ');
+}
+
+// _markIrrelevant Has optional arg for board, if not sent updates this->playerBoard
+void BattleshipGameAlgo::_markIrrelevant(int depth, int row, int col)
 {
 	if (row >= 0 && row < this->playerBoard.rows &&
 		col >= 0 && col < this->playerBoard.cols &&
 		depth >= 0 && depth < this->playerBoard.depth)
 	{
-		if (_board != nullptr) 
-		{
-			// create refrence for vector pointers
-			vector<vector<vector<char>>> &board = *_board;
-			board[depth][row][col] = irrelevnatCell;
-			// delete refrence
-			delete &board;
-		}
-		else this->playerBoard.board[depth][row][col] = irrelevnatCell;
+		this->playerBoard.board[depth][row][col] = irrelevnatCell;
 	}
 }
 
-bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>* _board, vector<vector<vector<int>>>* _scoreBoard)
+void BattleshipGameAlgo::_markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>& board) const
+{
+	if (row >= 0 && row < this->playerBoard.rows &&
+		col >= 0 && col < this->playerBoard.cols &&
+		depth >= 0 && depth < this->playerBoard.depth)
+	{
+		board[depth][row][col] = irrelevnatCell;
+	}
+}
+
+bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard) const
 {
 	unordered_map<char, int> nextHostileShips(hostileShips);
-	char ship = ' ';
-	bool goodZ, goodI, goodJ, resultZ = false, resultI = false, resultJ = false, foundPlace = false;
-	
+	bool goodZ, goodI, goodJ, resultZ = false, resultI = false, resultJ = false, allShipsPlaced = false;
+	vector<vector<vector<char>>>tempBoard(board);
+	char ship = irrelevnatCell;
 	
 	for (auto const& shipCounter : hostileShips)
 		if (shipCounter.second > 0)
@@ -56,19 +66,16 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 		}
 
 	// Return in case we ran out of ships to place
-	if (ship == ' ') return true;
+	if (ship == irrelevnatCell) return true;
 
-	// create refrences for vector pointers
-	vector<vector<vector<int>>> &scoreBoard = *_scoreBoard;
-	vector<vector<vector<char>>> &board = *_board;
-
-	vector<vector<vector<char>>>tempBoard(board);
 	for (int z = 0; z < this->playerBoard.depth; z++)
 	{
 		for (int i = 0; i < this->playerBoard.rows; i++)
 		{
 			for (int j = 0; j < this->playerBoard.cols; j++)
 			{
+				if (!_canAttack(z, i, j, tempBoard)) continue;
+				
 				goodZ = true;
 				goodI = true;
 				goodJ = true;
@@ -76,37 +83,30 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				// Verify there is room for the whole ship in each axis
 				for (int l = 1; l < getShipSize(ship); l++)
 				{
-					if (!this->_canAttack(z + l, i, j)) goodZ = false;
-					if (!this->_canAttack(z, i + l, j)) goodI = false;
-					if (!this->_canAttack(z, i, j + l)) goodJ = false;
+					if (!_canAttack(z + l, i, j, tempBoard)) goodZ = false;
+					if (!_canAttack(z, i + l, j, tempBoard)) goodI = false;
+					if (!_canAttack(z, i, j + l, tempBoard)) goodJ = false;
 				}
-				foundPlace = foundPlace || goodZ || goodI || goodJ;
 
 				if (goodZ)
 				{
 					// init temp board
-					/*
-					 *for (int z = 0; z < this->playerBoard.depth; z++)
-						for (int i = 0; i < this->playerBoard.rows; i++)
-							for (int j = 0; j < this->playerBoard.cols; j++) 
-								tempBoard[z][i][j] = board[z][i][j];
-					 */
-					
+					tempBoard = board;
 
 					// Mark surrounding cells irrelevant
 					for (int l = 0; l < getShipSize(ship); l++)
 					{
-						this->_markIrrelevant(z + l, i, j, &tempBoard);
-						this->_markIrrelevant(z + l + 1, i, j, &tempBoard);
-						this->_markIrrelevant(z + l - 1, i, j, &tempBoard);
-						this->_markIrrelevant(z + l, i + 1, j, &tempBoard);
-						this->_markIrrelevant(z + l, i - 1, j, &tempBoard);
-						this->_markIrrelevant(z + l, i, j + 1, &tempBoard);
-						this->_markIrrelevant(z + l, i, j - 1, &tempBoard);
+						_markIrrelevant(z + l, i, j, tempBoard);
+						_markIrrelevant(z + l + 1, i, j, tempBoard);
+						_markIrrelevant(z + l - 1, i, j, tempBoard);
+						_markIrrelevant(z + l, i + 1, j, tempBoard);
+						_markIrrelevant(z + l, i - 1, j, tempBoard);
+						_markIrrelevant(z + l, i, j + 1, tempBoard);
+						_markIrrelevant(z + l, i, j - 1, tempBoard);
 					}
 					
 					// call again with reduced hostile ships counter
-					resultZ = this->_placeNextShip(nextHostileShips, &tempBoard, _scoreBoard);
+					resultZ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard);
 
 					// Add ship's score to relevant cells
 					if (resultZ)
@@ -117,27 +117,23 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodI)
 				{
 					// init temp board
-					/*
-					 *for (int z = 0; z < this->playerBoard.depth; z++)
-						for (int i = 0; i < this->playerBoard.rows; i++)
-							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
-					 */
+					tempBoard = board;
 					
 
 					// Add ship's score to relevant cells and mark surrounding cells irrelevant
 					for (int l = 0; l < getShipSize(ship); l++)
 					{
-						this->_markIrrelevant(z, i + l, j, &tempBoard);
-						this->_markIrrelevant(z + 1, i + l, j, &tempBoard);
-						this->_markIrrelevant(z - 1, i + l, j, &tempBoard);
-						this->_markIrrelevant(z, i + l + 1, j, &tempBoard);
-						this->_markIrrelevant(z, i + l - 1, j, &tempBoard);
-						this->_markIrrelevant(z, i + l, j + 1, &tempBoard);
-						this->_markIrrelevant(z, i + l, j - 1, &tempBoard);
+						_markIrrelevant(z, i + l, j, tempBoard);
+						_markIrrelevant(z + 1, i + l, j, tempBoard);
+						_markIrrelevant(z - 1, i + l, j, tempBoard);
+						_markIrrelevant(z, i + l + 1, j, tempBoard);
+						_markIrrelevant(z, i + l - 1, j, tempBoard);
+						_markIrrelevant(z, i + l, j + 1, tempBoard);
+						_markIrrelevant(z, i + l, j - 1, tempBoard);
 					}
 
 					// call again with reduced hostile ships counter
-					resultI = this->_placeNextShip(nextHostileShips, &tempBoard, _scoreBoard);
+					resultI = _placeNextShip(nextHostileShips, tempBoard, scoreBoard);
 
 					// Add ship's score to relevant cells
 					if (resultI)
@@ -147,42 +143,35 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodJ)
 				{
 					// init temp board
-					/*
-					 *for (int z = 0; z < this->playerBoard.depth; z++)
-						for (int i = 0; i < this->playerBoard.rows; i++)
-							for (int j = 0; j < this->playerBoard.cols; j++) tempBoard[z][i][j] = board[z][i][j];
-					 */
-					
+					tempBoard = board;
 
 					// Add ship's score to relevant cells and mark surrounding cells irrelevant
 					for (int l = 0; l < getShipSize(ship); l++)
 					{
-						this->_markIrrelevant(z, i, j + l, &tempBoard);
-						this->_markIrrelevant(z + 1, i, j + l, &tempBoard);
-						this->_markIrrelevant(z - 1, i, j + l, &tempBoard);
-						this->_markIrrelevant(z, i + 1, j + l, &tempBoard);
-						this->_markIrrelevant(z, i - 1, j + l, &tempBoard);
-						this->_markIrrelevant(z, i, j + l + 1, &tempBoard);
-						this->_markIrrelevant(z, i, j + l - 1, &tempBoard);
+						_markIrrelevant(z, i, j + l, tempBoard);
+						_markIrrelevant(z + 1, i, j + l, tempBoard);
+						_markIrrelevant(z - 1, i, j + l, tempBoard);
+						_markIrrelevant(z, i + 1, j + l, tempBoard);
+						_markIrrelevant(z, i - 1, j + l, tempBoard);
+						_markIrrelevant(z, i, j + l + 1, tempBoard);
+						_markIrrelevant(z, i, j + l - 1, tempBoard);
 					}
 
 					// call again with reduced hostile ships counter
-					resultJ = this->_placeNextShip(nextHostileShips, &tempBoard, _scoreBoard);
+					resultJ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard);
 
 					// Add ship's score to relevant cells
 					if (resultJ)
 						for (int l = 0; l < getShipSize(ship); l++)
 							scoreBoard[z][i][j + l] += getShipScore(ship);
 				}
+
+				allShipsPlaced = allShipsPlaced || resultZ || resultI || resultJ;
 			}
 		}
 	}
 
-	// delete references
-	delete &scoreBoard;
-	delete &board;
-
-	return foundPlace && (resultZ || resultI || resultJ);
+	return allShipsPlaced;
 }
 
 Coordinate BattleshipGameAlgo::_getBestGuess()
@@ -198,7 +187,7 @@ Coordinate BattleshipGameAlgo::_getBestGuess()
 	// Calculate score for each cell on the board according to how many ships
 	// could be placed there (and how much points those ships are worth). 
 	// Positioning ships under to the assumption that the opponent has the exact same ships as this player.
-	this->_placeNextShip(this->playerBoard.hostileShips, &this->playerBoard.board, &scoreBoard);
+	_placeNextShip(this->playerBoard.hostileShips, this->playerBoard.board, scoreBoard);
 
 	// Find highest scored cell
 	for (int z = 0; z < this->playerBoard.depth; z++)
@@ -241,12 +230,12 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 			{
 				current = board.charAt(Coordinate(i + 1, j + 1, z + 1));
 				this->playerBoard.board[z][i].push_back(current);
-				if (current != ' ') this->playerBoard.hostileShips[current]++;
+				if (current != ' ') this->playerBoard.hostileShips[tolower(current)]++;
 			}
 		}
 	}
 
-	for (char c : shipsBySize) this->playerBoard.hostileShips[c] = this->playerBoard.hostileShips[c] / getShipSize(c);
+	for (char c : shipsBySize) this->playerBoard.hostileShips[tolower(c)] = this->playerBoard.hostileShips[tolower(c)] / getShipSize(c);
 
 	set<tuple<int, int, int>> irrelevantCells;
 	for (int z = 0; z < this->playerBoard.depth; z++)
@@ -268,7 +257,7 @@ void BattleshipGameAlgo::setBoard(const BoardData& board)
 		}
 	}
 	for (auto const& cell : irrelevantCells)
-		this->_markIrrelevant(get<0>(cell), get<1>(cell), get<2>(cell));
+		_markIrrelevant(get<0>(cell), get<1>(cell), get<2>(cell));
 }
 
 Coordinate BattleshipGameAlgo::attack()
@@ -280,30 +269,30 @@ Coordinate BattleshipGameAlgo::attack()
 	// target mode - targeting a specific ship
 	if (this->target->direction < 1) // don't know direction or no direction
 	{
-		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col);
-		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col);
-		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1);
-		if (this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1)) return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1);
-		if (this->_canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col);
-		if (this->_canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col);
+		if (_canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].row + 1, this->target->edges[0].col, this->target->edges[0].depth);
+		if (_canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].row - 1, this->target->edges[0].col, this->target->edges[0].depth);
+		if (_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1)) return _Coordinate(this->target->edges[0].row, this->target->edges[0].col + 1, this->target->edges[0].depth);
+		if (_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1)) return _Coordinate(this->target->edges[0].row, this->target->edges[0].col - 1, this->target->edges[0].depth);
+		if (_canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].row, this->target->edges[0].col, this->target->edges[0].depth + 1);
+		if (_canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col)) return _Coordinate(this->target->edges[0].row, this->target->edges[0].col, this->target->edges[0].depth - 1);
 	}
 	if (this->target->direction == 1) // horizontal
 	{
 		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
 		{
-			if (this->target->edges[0].col > this->target->edges[1].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1);
-			if (this->target->edges[0].col < this->target->edges[1].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1);
+			if (this->target->edges[0].col > this->target->edges[1].col && _canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col + 1))
+				return _Coordinate(this->target->edges[0].row, this->target->edges[0].col + 1, this->target->edges[0].depth);
+			if (this->target->edges[0].col < this->target->edges[1].col && _canAttack(this->target->edges[0].depth, this->target->edges[0].row, this->target->edges[0].col - 1))
+				return _Coordinate(this->target->edges[0].row, this->target->edges[0].col - 1, this->target->edges[0].depth);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
 		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
 		{
-			if (this->target->edges[1].col > this->target->edges[0].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col + 1))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col + 1);
-			if (this->target->edges[1].col < this->target->edges[0].col && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col - 1))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col - 1);
+			if (this->target->edges[1].col > this->target->edges[0].col && _canAttack(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col + 1))
+				return _Coordinate(this->target->edges[1].row, this->target->edges[1].col + 1, this->target->edges[0].depth);
+			if (this->target->edges[1].col < this->target->edges[0].col && _canAttack(this->target->edges[0].depth, this->target->edges[1].row, this->target->edges[1].col - 1))
+				return _Coordinate(this->target->edges[1].row, this->target->edges[1].col - 1, this->target->edges[0].depth);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 1;
 		}
@@ -312,19 +301,19 @@ Coordinate BattleshipGameAlgo::attack()
 	{
 		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
 		{
-			if (this->target->edges[0].row > this->target->edges[1].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col);
-			if (this->target->edges[0].row < this->target->edges[1].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col - 1);
+			if (this->target->edges[0].row > this->target->edges[1].row && _canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].row + 1, this->target->edges[0].col, this->target->edges[0].depth);
+			if (this->target->edges[0].row < this->target->edges[1].row && _canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].row - 1, this->target->edges[0].col - 1, this->target->edges[0].depth);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
 		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
 		{
-			if (this->target->edges[1].row > this->target->edges[0].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row + 1, this->target->edges[1].col))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row + 1, this->target->edges[1].col);
-			if (this->target->edges[1].row < this->target->edges[0].row && this->_canAttack(this->target->edges[0].depth, this->target->edges[1].row - 1, this->target->edges[1].col))
-				return _Coordinate(this->target->edges[0].depth, this->target->edges[1].row - 1, this->target->edges[1].col);
+			if (this->target->edges[1].row > this->target->edges[0].row && _canAttack(this->target->edges[0].depth, this->target->edges[1].row + 1, this->target->edges[1].col))
+				return _Coordinate(this->target->edges[1].row + 1, this->target->edges[1].col, this->target->edges[0].depth);
+			if (this->target->edges[1].row < this->target->edges[0].row && _canAttack(this->target->edges[0].depth, this->target->edges[1].row - 1, this->target->edges[1].col))
+				return _Coordinate(this->target->edges[1].row - 1, this->target->edges[1].col, this->target->edges[0].depth);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 1;
 		}
@@ -333,19 +322,19 @@ Coordinate BattleshipGameAlgo::attack()
 	{
 		if (this->target->edgeReached != 0) // didn't reach the end of target vessel with edge[0]
 		{
-			if (this->target->edges[0].depth > this->target->edges[1].depth && this->_canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col);
-			if (this->target->edges[0].depth < this->target->edges[1].depth && this->_canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[0].depth - 1, this->target->edges[0].row - 1, this->target->edges[0].col);
+			if (this->target->edges[0].depth > this->target->edges[1].depth && _canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].row, this->target->edges[0].col, this->target->edges[0].depth + 1);
+			if (this->target->edges[0].depth < this->target->edges[1].depth && _canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[0].row - 1, this->target->edges[0].col, this->target->edges[0].depth - 1);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
 		if (this->target->edgeReached != 1) // didn't reach the end of target vessel with edge[1]
 		{
-			if (this->target->edges[1].depth > this->target->edges[0].depth && this->_canAttack(this->target->edges[1].depth + 1, this->target->edges[1].row, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[1].depth + 1, this->target->edges[1].row, this->target->edges[0].col);
-			if (this->target->edges[1].depth < this->target->edges[0].depth && this->_canAttack(this->target->edges[1].depth - 1, this->target->edges[1].row, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[1].depth - 1, this->target->edges[1].row, this->target->edges[0].col);
+			if (this->target->edges[1].depth > this->target->edges[0].depth && _canAttack(this->target->edges[1].depth + 1, this->target->edges[1].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[1].row, this->target->edges[0].col, this->target->edges[1].depth + 1);
+			if (this->target->edges[1].depth < this->target->edges[0].depth && _canAttack(this->target->edges[1].depth - 1, this->target->edges[1].row, this->target->edges[0].col))
+				return _Coordinate(this->target->edges[1].row, this->target->edges[0].col, this->target->edges[1].depth - 1);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 1;
 		}
@@ -365,7 +354,7 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 		int col = fitMove.col;
 		int depth = fitMove.depth;
 
-		this->_markIrrelevant(depth ,row, col);
+		_markIrrelevant(depth ,row, col);
 
 		switch (result) {
 		case AttackResult::Miss:
@@ -394,25 +383,25 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 					this->target->edges[1] = Coordinate(row, col, depth);
 					if (this->target->edges[0].row == this->target->edges[1].row) {
 						this->target->direction = 1;
-						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row + 1, this->target->edges[0].col);
-						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row - 1, this->target->edges[0].col);
-						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row + 1, this->target->edges[0].col);
-						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row - 1, this->target->edges[0].col);
+						_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row + 1, this->target->edges[0].col);
+						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row - 1, this->target->edges[0].col);
+						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row + 1, this->target->edges[0].col);
+						_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row - 1, this->target->edges[0].col);
 					}
 					else if (this->target->edges[0].col == this->target->edges[1].col)
 					{
 						this->target->direction = 2;
-						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col + 1);
-						this->_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col - 1);
-						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col + 1);
-						this->_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col - 1);
+						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col + 1);
+						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col - 1);
+						_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col + 1);
+						_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col - 1);
 					}
 					else {
 						this->target->direction = 3;
-						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col + 1);
-						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col - 1);
-						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col + 1);
-						this->_markIrrelevant(target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col - 1);
+						_markIrrelevant(target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col + 1);
+						_markIrrelevant(target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col - 1);
+						_markIrrelevant(target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col + 1);
+						_markIrrelevant(target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col - 1);
 
 					}
 				}
@@ -427,23 +416,23 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 				// mark current cell's surrounding cells as irrelevant according to direction
 				if (this->target->direction == 1)
 				{
-					this->_markIrrelevant(depth + 1, row + 1, col);
-					this->_markIrrelevant(depth + 1, row - 1, col);
-					this->_markIrrelevant(depth - 1, row + 1, col);
-					this->_markIrrelevant(depth - 1, row - 1, col);
+					_markIrrelevant(depth + 1, row + 1, col);
+					_markIrrelevant(depth + 1, row - 1, col);
+					_markIrrelevant(depth - 1, row + 1, col);
+					_markIrrelevant(depth - 1, row - 1, col);
 				}
 				else if (this->target->direction == 2)
 				{
-					this->_markIrrelevant(depth + 1, row, col + 1);
-					this->_markIrrelevant(depth + 1, row, col - 1);
-					this->_markIrrelevant(depth - 1, row, col + 1);
-					this->_markIrrelevant(depth - 1, row, col - 1);
+					_markIrrelevant(depth + 1, row, col + 1);
+					_markIrrelevant(depth + 1, row, col - 1);
+					_markIrrelevant(depth - 1, row, col + 1);
+					_markIrrelevant(depth - 1, row, col - 1);
 				}
 				else {
-					this->_markIrrelevant(depth, row + 1, col + 1);
-					this->_markIrrelevant(depth, row + 1, col - 1);
-					this->_markIrrelevant(depth, row - 1, col + 1);
-					this->_markIrrelevant(depth, row - 1, col - 1);
+					_markIrrelevant(depth, row + 1, col + 1);
+					_markIrrelevant(depth, row + 1, col - 1);
+					_markIrrelevant(depth, row - 1, col + 1);
+					_markIrrelevant(depth, row - 1, col - 1);
 				}
 
 				this->target->hitCount++;
@@ -451,20 +440,20 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 			break;
 		case AttackResult::Sink:
 			// mark surrounding cells as irrelevant (last hit, can add all directions)
-			this->_markIrrelevant(depth + 1, row + 1, col);
-			this->_markIrrelevant(depth + 1, row - 1, col);
-			this->_markIrrelevant(depth - 1, row + 1, col);
-			this->_markIrrelevant(depth - 1, row - 1, col);
-			this->_markIrrelevant(depth + 1, row, col + 1);
-			this->_markIrrelevant(depth + 1, row, col - 1);
-			this->_markIrrelevant(depth - 1, row, col + 1);
-			this->_markIrrelevant(depth - 1, row, col - 1);
-			this->_markIrrelevant(depth, row + 1, col + 1);
-			this->_markIrrelevant(depth, row + 1, col - 1);
-			this->_markIrrelevant(depth, row - 1, col + 1);
-			this->_markIrrelevant(depth, row - 1, col - 1);
+			_markIrrelevant(depth + 1, row + 1, col);
+			_markIrrelevant(depth + 1, row - 1, col);
+			_markIrrelevant(depth - 1, row + 1, col);
+			_markIrrelevant(depth - 1, row - 1, col);
+			_markIrrelevant(depth + 1, row, col + 1);
+			_markIrrelevant(depth + 1, row, col - 1);
+			_markIrrelevant(depth - 1, row, col + 1);
+			_markIrrelevant(depth - 1, row, col - 1);
+			_markIrrelevant(depth, row + 1, col + 1);
+			_markIrrelevant(depth, row + 1, col - 1);
+			_markIrrelevant(depth, row - 1, col + 1);
+			_markIrrelevant(depth, row - 1, col - 1);
 
-			this->playerBoard.hostileShips[getShipBySize(this->target->hitCount + 1)]--;
+			this->playerBoard.hostileShips[tolower(getShipBySize(this->target->hitCount + 1))]--;
 
 			delete this->target;
 			this->target = nullptr; // back to search mode
