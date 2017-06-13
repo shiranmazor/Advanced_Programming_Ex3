@@ -161,10 +161,11 @@ int BattleBoard::CheckVictory()
 
 char BattleBoard::charAt(Coordinate c) const
 {
-	if (c.depth > 0 && c.row > 0 && c.col)
-		return this->board[c.depth - 1][c.row - 1][c.col - 1];
-	else
-		return this->board[c.depth][c.row][c.col];
+	return this->board[c.depth - 1][c.row - 1][c.col - 1];
+	//if (c.depth > 0 && c.row > 0 && c.col)
+	//	return this->board[c.depth - 1][c.row - 1][c.col - 1];
+	//else
+	//	return this->board[c.depth][c.row][c.col];
 }
 
 BattleBoard BattleBoard::getPlayerBoard(Player player) const

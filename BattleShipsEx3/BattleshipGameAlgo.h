@@ -64,9 +64,10 @@ public:
 
 private:
 	void _markIrrelevant(int depth, int row, int col);
-	void _markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>& board) const;
+	void _markCell(int depth, int row, int col, vector<vector<vector<char>>>& board, char mark) const;
 	bool _canAttack(int z, int i, int j) const;
 	bool _canAttack(int z, int i, int j, vector<vector<vector<char>>>& board) const;
 	Coordinate _getBestGuess();
-	bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard) const;
+	bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard, int d) const;
+	void BattleshipGameAlgo::_placeShipsDumb(vector<vector<vector<int>>>& scoreBoard) const;
 };

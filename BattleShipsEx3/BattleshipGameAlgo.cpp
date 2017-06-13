@@ -40,31 +40,35 @@ void BattleshipGameAlgo::_markIrrelevant(int depth, int row, int col)
 	}
 }
 
-void BattleshipGameAlgo::_markIrrelevant(int depth, int row, int col, vector<vector<vector<char>>>& board) const
+void BattleshipGameAlgo::_markCell(int depth, int row, int col, vector<vector<vector<char>>>& board, char mark) const
 {
 	if (row >= 0 && row < this->playerBoard.rows &&
 		col >= 0 && col < this->playerBoard.cols &&
 		depth >= 0 && depth < this->playerBoard.depth)
 	{
-		board[depth][row][col] = irrelevnatCell;
+		board[depth][row][col] = mark;
 	}
 }
 
-bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard) const
+bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard, int d) const
 {
 	unordered_map<char, int> nextHostileShips(hostileShips);
 	bool goodZ, goodI, goodJ, resultZ = false, resultI = false, resultJ = false, allShipsPlaced = false;
 	vector<vector<vector<char>>>tempBoard(board);
 	char ship = irrelevnatCell;
+	int remainingShips(0);
 	
 	for (auto const& shipCounter : hostileShips)
-		if (shipCounter.second > 0)
+	{
+		if (shipCounter.second > 0 && ship == irrelevnatCell)
 		{
 			ship = shipCounter.first;
 			nextHostileShips[shipCounter.first]--;
-			break;
+			//break;
 		}
-
+		remainingShips += shipCounter.second;
+	}
+	if (remainingShips > 1) cout << "_placeNextShip run, for ship '" << ship << "', remaining ships " << remainingShips << " DEPTH - " << d << endl;
 	// Return in case we ran out of ships to place
 	if (ship == irrelevnatCell) return true;
 
@@ -91,22 +95,37 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodZ)
 				{
 					// init temp board
-					tempBoard = board;
-
-					// Mark surrounding cells irrelevant
-					for (int l = 0; l < getShipSize(ship); l++)
+					//tempBoard = board;
+					if (remainingShips > 1)
 					{
-						_markIrrelevant(z + l, i, j, tempBoard);
-						_markIrrelevant(z + l + 1, i, j, tempBoard);
-						_markIrrelevant(z + l - 1, i, j, tempBoard);
-						_markIrrelevant(z + l, i + 1, j, tempBoard);
-						_markIrrelevant(z + l, i - 1, j, tempBoard);
-						_markIrrelevant(z + l, i, j + 1, tempBoard);
-						_markIrrelevant(z + l, i, j - 1, tempBoard);
-					}
+						// Mark surrounding cells irrelevant
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							_markCell(z + l, i, j, tempBoard, irrelevnatCell);
+							_markCell(z + l + 1, i, j, tempBoard, irrelevnatCell);
+							_markCell(z + l - 1, i, j, tempBoard, irrelevnatCell);
+							_markCell(z + l, i + 1, j, tempBoard, irrelevnatCell);
+							_markCell(z + l, i - 1, j, tempBoard, irrelevnatCell);
+							_markCell(z + l, i, j + 1, tempBoard, irrelevnatCell);
+							_markCell(z + l, i, j - 1, tempBoard, irrelevnatCell);
+						}
 					
-					// call again with reduced hostile ships counter
-					resultZ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard);
+						// call again with reduced hostile ships counter
+						if (remainingShips > 2) cout << z << ", " << i << ", " << j << " - Z align:";
+						resultZ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard, d + 1);
+
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							_markCell(z + l, i, j, tempBoard, ' ');
+							_markCell(z + l + 1, i, j, tempBoard, ' ');
+							_markCell(z + l - 1, i, j, tempBoard, ' ');
+							_markCell(z + l, i + 1, j, tempBoard, ' ');
+							_markCell(z + l, i - 1, j, tempBoard, ' ');
+							_markCell(z + l, i, j + 1, tempBoard, ' ');
+							_markCell(z + l, i, j - 1, tempBoard, ' ');
+						}
+					}
+					else resultZ = true;
 
 					// Add ship's score to relevant cells
 					if (resultZ)
@@ -117,23 +136,37 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodI)
 				{
 					// init temp board
-					tempBoard = board;
-					
-
-					// Add ship's score to relevant cells and mark surrounding cells irrelevant
-					for (int l = 0; l < getShipSize(ship); l++)
+					//tempBoard = board;
+					if (remainingShips > 1)
 					{
-						_markIrrelevant(z, i + l, j, tempBoard);
-						_markIrrelevant(z + 1, i + l, j, tempBoard);
-						_markIrrelevant(z - 1, i + l, j, tempBoard);
-						_markIrrelevant(z, i + l + 1, j, tempBoard);
-						_markIrrelevant(z, i + l - 1, j, tempBoard);
-						_markIrrelevant(z, i + l, j + 1, tempBoard);
-						_markIrrelevant(z, i + l, j - 1, tempBoard);
-					}
+						// Add ship's score to relevant cells and mark surrounding cells irrelevant
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							_markCell(z, i + l, j, tempBoard, irrelevnatCell);
+							_markCell(z + 1, i + l, j, tempBoard, irrelevnatCell);
+							_markCell(z - 1, i + l, j, tempBoard, irrelevnatCell);
+							_markCell(z, i + l + 1, j, tempBoard, irrelevnatCell);
+							_markCell(z, i + l - 1, j, tempBoard, irrelevnatCell);
+							_markCell(z, i + l, j + 1, tempBoard, irrelevnatCell);
+							_markCell(z, i + l, j - 1, tempBoard, irrelevnatCell);
+						}
 
-					// call again with reduced hostile ships counter
-					resultI = _placeNextShip(nextHostileShips, tempBoard, scoreBoard);
+						// call again with reduced hostile ships counter
+						if (remainingShips > 2) cout << z << ", " << i << ", " << j << " - I align:";
+						resultI = _placeNextShip(nextHostileShips, tempBoard, scoreBoard, d + 1);
+
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							_markCell(z, i + l, j, tempBoard, ' ');
+							_markCell(z + 1, i + l, j, tempBoard, ' ');
+							_markCell(z - 1, i + l, j, tempBoard, ' ');
+							_markCell(z, i + l + 1, j, tempBoard, ' ');
+							_markCell(z, i + l - 1, j, tempBoard, ' ');
+							_markCell(z, i + l, j + 1, tempBoard, ' ');
+							_markCell(z, i + l, j - 1, tempBoard, ' ');
+						}
+					}
+					else resultI = true;
 
 					// Add ship's score to relevant cells
 					if (resultI)
@@ -143,23 +176,37 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 				if (goodJ)
 				{
 					// init temp board
-					tempBoard = board;
-
-					// Add ship's score to relevant cells and mark surrounding cells irrelevant
-					for (int l = 0; l < getShipSize(ship); l++)
+					//tempBoard = board;
+					if (remainingShips > 1)
 					{
-						_markIrrelevant(z, i, j + l, tempBoard);
-						_markIrrelevant(z + 1, i, j + l, tempBoard);
-						_markIrrelevant(z - 1, i, j + l, tempBoard);
-						_markIrrelevant(z, i + 1, j + l, tempBoard);
-						_markIrrelevant(z, i - 1, j + l, tempBoard);
-						_markIrrelevant(z, i, j + l + 1, tempBoard);
-						_markIrrelevant(z, i, j + l - 1, tempBoard);
+						// Add ship's score to relevant cells and mark surrounding cells irrelevant
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							_markCell(z, i, j + l, tempBoard, irrelevnatCell);
+							_markCell(z + 1, i, j + l, tempBoard, irrelevnatCell);
+							_markCell(z - 1, i, j + l, tempBoard, irrelevnatCell);
+							_markCell(z, i + 1, j + l, tempBoard, irrelevnatCell);
+							_markCell(z, i - 1, j + l, tempBoard, irrelevnatCell);
+							_markCell(z, i, j + l + 1, tempBoard, irrelevnatCell);
+							_markCell(z, i, j + l - 1, tempBoard, irrelevnatCell);
+						}
+
+						// call again with reduced hostile ships counter
+						if (remainingShips > 2) cout << z << ", " << i << ", " << j << " - J align:";
+						resultJ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard, d + 1);
+
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							_markCell(z, i, j + l, tempBoard, ' ');
+							_markCell(z + 1, i, j + l, tempBoard, ' ');
+							_markCell(z - 1, i, j + l, tempBoard, ' ');
+							_markCell(z, i + 1, j + l, tempBoard, ' ');
+							_markCell(z, i - 1, j + l, tempBoard, ' ');
+							_markCell(z, i, j + l + 1, tempBoard, ' ');
+							_markCell(z, i, j + l - 1, tempBoard, ' ');
+						}
 					}
-
-					// call again with reduced hostile ships counter
-					resultJ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard);
-
+					else resultJ = true;
 					// Add ship's score to relevant cells
 					if (resultJ)
 						for (int l = 0; l < getShipSize(ship); l++)
@@ -174,20 +221,73 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 	return allShipsPlaced;
 }
 
+void BattleshipGameAlgo::_placeShipsDumb(vector<vector<vector<int>>>& scoreBoard) const
+{
+	bool goodZ, goodI, goodJ;
+	char ship = irrelevnatCell;
+
+	for (auto const& shipCounter : this->playerBoard.hostileShips)
+	{
+		ship = shipCounter.first;
+		for (int s = 0; s < shipCounter.second; s++)
+		{
+			for (int z = 0; z < this->playerBoard.depth; z++)
+			{
+				for (int i = 0; i < this->playerBoard.rows; i++)
+				{
+					for (int j = 0; j < this->playerBoard.cols; j++)
+					{
+						if (!_canAttack(z, i, j)) continue;
+		
+						goodZ = true;
+						goodI = true;
+						goodJ = true;
+		
+						// Verify there is room for the whole ship in each axis
+						for (int l = 1; l < getShipSize(ship); l++)
+						{
+							if (!_canAttack(z + l, i, j)) goodZ = false;
+							if (!_canAttack(z, i + l, j)) goodI = false;
+							if (!_canAttack(z, i, j + l)) goodJ = false;
+						}
+		
+						for (int l = 0; l < getShipSize(ship); l++)
+						{
+							if (goodZ) scoreBoard[z + l][i][j] += getShipScore(ship);
+							if (goodI) scoreBoard[z][i + l][j] += getShipScore(ship);
+							if (goodJ) scoreBoard[z][i][j + l] += getShipScore(ship);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 Coordinate BattleshipGameAlgo::_getBestGuess()
 {
 	vector<vector<vector<int>>> scoreBoard(this->playerBoard.depth, vector<vector<int>>(this->playerBoard.rows, vector<int>(this->playerBoard.cols)));
 	Coordinate bestCell = Coordinate(-1, -1, -1);
-	int bestScore = -1;
-
+	int bestScore(-1), remainingShips(0), relevantCells(0);
+	
+	for (auto const& shipCounter : this->playerBoard.hostileShips) remainingShips += shipCounter.second;
 	for (int z = 0; z < this->playerBoard.depth; z++)
+	{
 		for (int i = 0; i < this->playerBoard.rows; i++)
-			for (int j = 0; j < this->playerBoard.cols; j++) scoreBoard[z][i][j] = 0;
+		{
+			for (int j = 0; j < this->playerBoard.cols; j++)
+			{
+				if (_canAttack(z, i, j)) relevantCells++;
+			}
+		}
+	}
 
 	// Calculate score for each cell on the board according to how many ships
 	// could be placed there (and how much points those ships are worth). 
 	// Positioning ships under to the assumption that the opponent has the exact same ships as this player.
-	_placeNextShip(this->playerBoard.hostileShips, this->playerBoard.board, scoreBoard);
+	// In case of of too many options, use a simpler algorithm - place each remaining ships by itself, and not all of them together.
+	if (pow(relevantCells, remainingShips) <= 50000) _placeNextShip(this->playerBoard.hostileShips, this->playerBoard.board, scoreBoard, 0);
+	else _placeShipsDumb(scoreBoard);
 
 	// Find highest scored cell
 	for (int z = 0; z < this->playerBoard.depth; z++)
@@ -304,7 +404,7 @@ Coordinate BattleshipGameAlgo::attack()
 			if (this->target->edges[0].row > this->target->edges[1].row && _canAttack(this->target->edges[0].depth, this->target->edges[0].row + 1, this->target->edges[0].col))
 				return _Coordinate(this->target->edges[0].row + 1, this->target->edges[0].col, this->target->edges[0].depth);
 			if (this->target->edges[0].row < this->target->edges[1].row && _canAttack(this->target->edges[0].depth, this->target->edges[0].row - 1, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[0].row - 1, this->target->edges[0].col - 1, this->target->edges[0].depth);
+				return _Coordinate(this->target->edges[0].row - 1, this->target->edges[0].col, this->target->edges[0].depth);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
@@ -325,7 +425,7 @@ Coordinate BattleshipGameAlgo::attack()
 			if (this->target->edges[0].depth > this->target->edges[1].depth && _canAttack(this->target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col))
 				return _Coordinate(this->target->edges[0].row, this->target->edges[0].col, this->target->edges[0].depth + 1);
 			if (this->target->edges[0].depth < this->target->edges[1].depth && _canAttack(this->target->edges[0].depth - 1, this->target->edges[0].row, this->target->edges[0].col))
-				return _Coordinate(this->target->edges[0].row - 1, this->target->edges[0].col, this->target->edges[0].depth - 1);
+				return _Coordinate(this->target->edges[0].row, this->target->edges[0].col, this->target->edges[0].depth - 1);
 			// in the case that an attack cannot be made from this edge, mark it as reached
 			this->target->edgeReached = 0;
 		}
@@ -381,14 +481,14 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 					this->target->edges[1].depth == -1)
 				{
 					this->target->edges[1] = Coordinate(row, col, depth);
-					if (this->target->edges[0].row == this->target->edges[1].row) {
+					if (this->target->edges[0].col != this->target->edges[1].col) {
 						this->target->direction = 1;
 						_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row + 1, this->target->edges[0].col);
 						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row - 1, this->target->edges[0].col);
 						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row + 1, this->target->edges[0].col);
 						_markIrrelevant(target->edges[0].depth - 1, this->target->edges[0].row - 1, this->target->edges[0].col);
 					}
-					else if (this->target->edges[0].col == this->target->edges[1].col)
+					else if (this->target->edges[0].row != this->target->edges[1].row)
 					{
 						this->target->direction = 2;
 						_markIrrelevant(target->edges[0].depth + 1, this->target->edges[0].row, this->target->edges[0].col + 1);
