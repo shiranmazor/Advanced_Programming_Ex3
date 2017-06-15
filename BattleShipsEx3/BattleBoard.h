@@ -92,9 +92,6 @@ public:
 				}
 			}
 			getline(boardFile, line);
-			//if (line != "\r")
-			//	// bad board
-			//	return;
 		}
 
 		// convert invalid chars to spaces

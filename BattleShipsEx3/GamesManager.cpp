@@ -330,8 +330,8 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 		if (currentGame.gameNumber == -1)
 			return;
 		//build new game objects
-		//create game board
-		shared_ptr<BattleBoard> gameBoard = boards[currentGame.boardNumber - 1];
+		//create game board using copy constructor!! - copy the boards!
+		shared_ptr<BattleBoard> gameBoard(boards[currentGame.boardNumber - 1]);
 		g_playersAlgo_mutex.lock();
 		pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
 		pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
