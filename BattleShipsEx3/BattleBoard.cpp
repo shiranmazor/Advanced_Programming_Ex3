@@ -130,42 +130,56 @@ pair<int, int> BattleBoard::CalcScore()
 			else
 				scores.second += getShipScore(element.second->type);
 		}
-	
+	//debug_print_board();
 	return scores;
 }
 
 int BattleBoard::CheckVictory()
 {
+	//int winner(-1);
+	//int countA(0), countB(0), sinkA(0), sinkB(0);
+	//set<shared_ptr<Vessel>> seenVessels;
+
+	//for (auto const& element : this->ships)
+	//	if (seenVessels.find(element.second) == seenVessels.end())
+	//	{
+	//		seenVessels.insert(element.second);
+	//		if (element.second->player == A) countA++;
+	//		else countB++;
+	//		if (element.second->size <= element.second->hitNum)
+	//		{
+	//			if (element.second->player == A) sinkA++;
+	//			else sinkB++;
+	//		}
+	//	}
+
+	//if (countA == sinkA) winner = B;
+	//else if (countB == sinkB) winner = A;
+
+	//return winner;
 	int winner(-1);
-	int countA(0), countB(0), sinkA(0), sinkB(0);
-	set<shared_ptr<Vessel>> seenVessels;
+	int countA(0), countB(0);
 
 	for (auto const& element : this->ships)
-		if (seenVessels.find(element.second) == seenVessels.end())
+	{
+		if (element.second->size > element.second->hitNum)
 		{
-			seenVessels.insert(element.second);
+			// Ship still floating
 			if (element.second->player == A) countA++;
 			else countB++;
-			if (element.second->size <= element.second->hitNum)
-			{
-				if (element.second->player == A) sinkA++;
-				else sinkB++;
-			}
 		}
+	}
 
-	if (countA == sinkA) winner = B;
-	else if (countB == sinkB) winner = A;
+	if (countA > 0 && countB <= 0) winner = A;
+	else if (countB > 0 && countA <= 0) winner = B;
 
 	return winner;
 }
 
 char BattleBoard::charAt(Coordinate c) const
 {
-	return this->board[c.depth - 1][c.row - 1][c.col - 1];
-	//if (c.depth > 0 && c.row > 0 && c.col)
-	//	return this->board[c.depth - 1][c.row - 1][c.col - 1];
-	//else
-	//	return this->board[c.depth][c.row][c.col];
+	if (c.depth > 0 && c.row > 0 && c.col > 0) return this->board[c.depth - 1][c.row - 1][c.col - 1];
+	return '-';
 }
 
 BattleBoard BattleBoard::getPlayerBoard(Player player) const
@@ -196,15 +210,11 @@ AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 	if (!isspace(c)) 
 	{
 		if (isAlreadyHit(c)) 
-		{
 			return (this->ships[makeKey(move)]->hitNum == this->ships[makeKey(move)]->size) ? AttackResult::Miss : AttackResult::Hit;
-		}
-		if (isupper(c) || islower(c)) 
-		{
-			this->board[move.depth][move.row][move.col] = isupper(c) ? HitMarkA : HitMarkB;
-			this->ships[makeKey(move)]->hitNum++;
-			return (this->ships[makeKey(move)]->hitNum == this->ships[makeKey(move)]->size) ? AttackResult::Sink : AttackResult::Hit;
-		}
+	
+		this->board[move.depth][move.row][move.col] = isupper(c) ? HitMarkA : HitMarkB;
+		this->ships[makeKey(move)]->hitNum++;
+		return (this->ships[makeKey(move)]->hitNum == this->ships[makeKey(move)]->size) ? AttackResult::Sink : AttackResult::Hit;
 	}
 	return AttackResult::Miss;
 }
@@ -213,9 +223,12 @@ void BattleBoard::debug_print_board()
 {
 	for (int z = 0; z < this->depth(); z++)
 	{
-		cout << "\ndepth " << z << "\n\n";
+		cout << "\ndepth " << z << "\n\n ";
+		for (int i = 0; i < this->rows(); i++) cout << i << ' ';
+		cout << endl;
 		for (int i = 0; i < this->rows(); i++)
 		{
+			cout << i;
 			for (int j = 0; j < this->cols(); j++)
 				cout << this->board[z][i][j] << "|";
 			cout << endl;
