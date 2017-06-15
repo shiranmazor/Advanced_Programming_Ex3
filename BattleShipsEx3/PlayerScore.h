@@ -36,6 +36,6 @@ public:
 	vector<PlayerRoundScore> rounds;
 
 	PlayerScore(const string name, int id);
-	void UpdateScore(bool isWon, int pointsFor, int pointsAgainst);
+	void UpdateScore(bool isWon, int pointsFor, int pointsAgainst, bool tie);
 	~PlayerScore() = default;
 };
