@@ -363,9 +363,9 @@ void updateGameResult(GameResult result)
 	//let's update scores
 	lock_guard<std::mutex> lock(g_playerScore_mutex);
 	//A:
-	g_pScores[playerAIndex].UpdateScore(result.winPlayer == 0, result.playerAScore, result.playerBScore);
+	g_pScores[playerAIndex].UpdateScore(result.winPlayer == 0, result.playerAScore, result.playerBScore, result.winPlayer == -1);
 	//B:
-	g_pScores[playerBIndex].UpdateScore(result.winPlayer == 1, result.playerBScore, result.playerAScore);
+	g_pScores[playerBIndex].UpdateScore(result.winPlayer == 1, result.playerBScore, result.playerAScore, result.winPlayer == -1);
 	
 }
 
@@ -391,7 +391,7 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	Player currentPlayer = A;
 	int onePlayerName = -1;
 	bool onePlayerGame = false; 
-	bool victory = false; int	winPlayer = 2;
+	bool victory = false; int winPlayer = -1;
 	
 
 	while (!victory)
@@ -449,11 +449,7 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	pair<int, int> gameScore = board->CalcScore();
 
 	GameResult result(playerAPair.second, playerBPair.second);
-	//check victory:
-	if (victory)
-	{
-		result.winPlayer = winPlayer;
-	}
+	result.winPlayer = winPlayer;
 	result.playerAScore = gameScore.first;
 	result.playerBScore = gameScore.second;
 	return result;

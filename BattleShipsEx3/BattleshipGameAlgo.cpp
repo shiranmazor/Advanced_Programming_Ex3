@@ -68,7 +68,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 		}
 		remainingShips += shipCounter.second;
 	}
-	if (remainingShips > 1) cout << "_placeNextShip run, for ship '" << ship << "', remaining ships " << remainingShips << " DEPTH - " << d << endl;
+	//if (remainingShips > 1) cout << "_placeNextShip run, for ship '" << ship << "', remaining ships " << remainingShips << " DEPTH - " << d << endl;
 	// Return in case we ran out of ships to place
 	if (ship == irrelevnatCell) return true;
 

@@ -6,7 +6,7 @@ PlayerScore::PlayerScore(const string name, int id): playerId(id), gamesCounter(
 
 }
 
-void PlayerScore::UpdateScore(bool isWon, int pointsFor, int pointsAgainst)
+void PlayerScore::UpdateScore(bool isWon, int pointsFor, int pointsAgainst, bool tie)
 {
 	if (rounds.size() == 0)//first round
 	{
@@ -14,7 +14,7 @@ void PlayerScore::UpdateScore(bool isWon, int pointsFor, int pointsAgainst)
 		PlayerRoundScore ps = PlayerRoundScore();
 		if (isWon)
 			ps.wins++;
-		else
+		else if (!tie) //if tie wins and losses stay the same
 			ps.losses++;
 		//update points and rates
 		ps.pointsAgainst += pointsAgainst;
