@@ -102,8 +102,6 @@ public:
 			for (int i = 0; i < this->_rows; i++)
 				for (int j = 0; j < this->_cols; j++)
 					if (!isCharValid(this->board[z][i][j])) this->board[z][i][j] = ' ';
-
-		//this->debug_print_board();
 	}
 
 	// Copy ctor
@@ -112,6 +110,18 @@ public:
 		this->_cols = b.cols();
 		this->_rows = b.rows();
 		this->_depth = b.depth();
+
+		unordered_map<shared_ptr<Vessel>, shared_ptr<Vessel>> newVessels;
+		for (auto const& element : b.ships)
+		{
+			if (newVessels.find(element.second) == newVessels.end())
+				newVessels[element.second] = make_shared<Vessel>(Vessel(*element.second));
+
+			this->ships[element.first].reset();
+			this->ships[element.first] = newVessels[element.second];
+		}
+		
+		for (auto element : newVessels) element.second.reset();
 	}
 
 	// destructor
