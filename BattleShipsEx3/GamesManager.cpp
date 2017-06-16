@@ -18,7 +18,6 @@ mutex g_gameCounter_mutex;
 mutex g_playersAlgo_mutex;
 mutex g_gamesQueue_mutex;
 mutex g_playerScore_mutex;
-std::condition_variable g_cond;
 
 void closeDLLs(vector<HINSTANCE> dlls)
 {
@@ -27,7 +26,8 @@ void closeDLLs(vector<HINSTANCE> dlls)
 		FreeLibrary(dlls[i]);
 }
 
-bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path, vector<string>& error_messages)
+bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path,
+	vector<string>& error_messages)
 {
 	if (sboardFiles.size() < 1)
 		error_messages.push_back("No board files (*.sboard) looking in path: "+path);
@@ -94,7 +94,7 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
 	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, 
-	vector<unique_ptr<BattleBoard>>& boards)
+	vector<shared_ptr<BattleBoard>>& boards)
 {
 	vector<string>  errors;
 	vector<string>  boardErrors;
@@ -118,9 +118,9 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	//load files, create battleBoard instance and check validity
 	for(auto boardF: sboardfiles)
 	{
-		unique_ptr<BattleBoard> board = make_unique<BattleBoard>(boardF);
+		shared_ptr<BattleBoard> board = make_shared<BattleBoard>(boardF);
 		if (board->isBoardValid(boardErrors))
-			boards.push_back(std::move(board));
+			boards.push_back(board);
 	}
 	if (boards.size() == 0)
 		errors.push_back("Error: all sboard files are Invalid. no board! exising.");
@@ -141,7 +141,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	vector<HINSTANCE> dllLoaded;
 	//load dll's
 	vector<GetAlgorithmFuncType> algorithmFuncs;
-	vector<unique_ptr<BattleBoard>> boards;
+	vector<shared_ptr<BattleBoard>> boards;
 	g_gamesCounter = 0;
 
 	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
@@ -192,13 +192,12 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 void ReportResults()
 {
 	int current_round = 1;
-
-	while(current_round <= g_each_player_games_num)//as long as the Tournament continue we want to check mid results and print them
+	//as long as the Tournament continue we want to check mid results and print them
+	while(current_round <= g_each_player_games_num)
 	{
 		//check if all players has done current round
 		if (checkRound(current_round))
 		{
-			cout << "Current Round " << current_round << endl;
 			//print game counter
 			g_gameCounter_mutex.lock();
 			
@@ -287,9 +286,6 @@ void  calcGameCombinations(int playersNum, int boardsNumber)
 	}
 	g_total_games_size = gamesCounter-1;
 }
-/*
- *playSingleGame : dllNames include playerA dll name and playerB dll name
- */
 
 Game getCurrentGame()
 {
@@ -320,7 +316,7 @@ bool isTournamentDone()
  * update gameResults
  * 
  */
-void GameThread(vector<unique_ptr<BattleBoard>>& boards)
+void GameThread(vector<shared_ptr<BattleBoard>>& boards)
 {
 	//get unique next current Game obj from queue
 	while(!isTournamentDone())
@@ -372,7 +368,7 @@ void updateGameResult(GameResult result)
 
 
 GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
-	vector<unique_ptr<BattleBoard>>& boards, int curentBoardNum)
+	vector<shared_ptr<BattleBoard>>& boards, int curentBoardNum)
 {
 	//create players instance
 	unique_ptr<IBattleshipGameAlgo> playerA(playerAPair.first());
@@ -392,7 +388,6 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 	bool onePlayerGame = false; 
 	bool victory = false; int winPlayer = -1;
 	
-
 	while (!victory)
 	{
 		if (currentPlayer == B)
@@ -459,7 +454,7 @@ in main we get arguments, get dll and sboard files, calc number of games and the
 */
 int main(int argc, char **argv)
 {
-	string path; int threads;
+	string path; int threads =-1;
 	vector<string> error_messages;
 	vector<string> sboardFiles;
 	vector<string> dllFiles;
@@ -476,26 +471,29 @@ int main(int argc, char **argv)
 	int i = 1; //first item is the name of the program
 	while (i < argc)
 	{
-		if (i == 1)//path is apearing only in the first item
+		if (strcmp(argv[i], "-threads") == 0)
+		{
+			threads = atoi(argv[i + 1]);
+			i++;
+		}
+		else if (i == 1)//path is apearing only in the first item
 		{
 			path = argv[i];
 			if (!dirExists(path))
 			{
 				std::cout << "Wrong path:" + path << endl;
 				return -1;
-			}
-			configMap = getConfigParams(path);
-			threads = stoi(configMap["threads"]);//set default threade number
+			}		
 		}
-		else
-		{
-			if (strcmp(argv[i], "-threads") == 0)
-			{
-				threads = atoi(argv[i + 1]);
-				i++;
-			}
-		}
+		
 		i++;
+	}
+
+	if (threads == -1)// no -thread argument
+	{
+		//set default threade number
+		configMap = getConfigParams(path);
+		threads = stoi(configMap["threads"]);
 	}
 	//done reading params, get game files
 	getGameFiles(path, sboardFiles, dllFiles, dllNames);

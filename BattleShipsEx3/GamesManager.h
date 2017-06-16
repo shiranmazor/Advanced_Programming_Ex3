@@ -38,7 +38,8 @@ public:
 	int playerAScore;
 	int playerBScore;
 	int winPlayer;
-	GameResult(string playerAS, string playerBS):playerA(playerAS), playerB(playerBS),playerAScore(0),playerBScore(0)
+	GameResult(string playerAS, string playerBS):playerA(playerAS),
+	playerB(playerBS),playerAScore(0),playerBScore(0), winPlayer(-1)
 	{}
 
 };
@@ -55,7 +56,7 @@ struct Game
 
 struct sortPlayersScoreByWinRate
 {
-	bool operator()(const std::pair<string, PlayerRoundScore> &left, const std::pair<string, PlayerRoundScore> &right)
+	bool operator()(const std::pair<string, PlayerRoundScore> &left, const std::pair<string, PlayerRoundScore> &right) const
 	{
 		return  left.second.winRate > right.second.winRate;
 	}
@@ -69,7 +70,7 @@ struct sortPlayersScoreByWinRate
 */
 bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path,
 	vector<string>& error_messages);
-void closeDLLs(vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>> & dll_vec);
+void closeDLLs(vector<HINSTANCE> dlls);
 void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles,
 	vector<string>& dllNames);
 
@@ -78,16 +79,16 @@ load algorithms and board file for one game
 */
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
 	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs,
-	vector<unique_ptr<BattleBoard>>& boards);
+	vector<shared_ptr<BattleBoard>>& boards);
 void  calcGameCombinations(int playersNum, int boardsNumber);
 
 GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, 
 	pair<GetAlgorithmFuncType, string> playerBPair,
-	vector<unique_ptr<BattleBoard>>& boards, int curentBoardNum);
+	vector<shared_ptr<BattleBoard>>& boards, int curentBoardNum);
 
 int manageGames(vector<string> dllFiles, vector<string> dllNames, vector<string> sboardFiles, int threads);
 
-void GameThread(vector<unique_ptr<BattleBoard>>& boards);
+void GameThread(vector<shared_ptr<BattleBoard>>& boards);
 void updateGameResult(GameResult result);
 bool isTournamentDone();
 void IncreaseGameCounter();
