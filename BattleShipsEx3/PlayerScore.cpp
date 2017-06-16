@@ -20,7 +20,7 @@ void PlayerScore::UpdateScore(bool isWon, int pointsFor, int pointsAgainst, bool
 		ps.pointsAgainst += pointsAgainst;
 		ps.pointsFor += pointsFor;
 		double total = ps.wins + ps.losses;
-		ps.winRate = static_cast<double>(ps.wins) / total;
+		ps.winRate = (static_cast<double>(ps.wins) / total) * 100.0;
 		rounds.push_back(ps);
 	}
 	else
@@ -36,7 +36,7 @@ void PlayerScore::UpdateScore(bool isWon, int pointsFor, int pointsAgainst, bool
 		newRound.pointsAgainst += pointsAgainst;
 		newRound.pointsFor += pointsFor;
 		double total = newRound.wins + newRound.losses;
-		newRound.winRate = static_cast<double>(newRound.wins) / total;
+		newRound.winRate = (static_cast<double>(newRound.wins) / total)* 100.0;
 		rounds.push_back(newRound);
 
 	}

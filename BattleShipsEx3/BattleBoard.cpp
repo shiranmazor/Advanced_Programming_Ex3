@@ -221,7 +221,7 @@ AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 
 void BattleBoard::debug_print_board()
 {
-	for (int z = 0; z < this->depth(); z++)
+	/*for (int z = 0; z < this->depth(); z++)
 	{
 		cout << "\ndepth " << z << "\n\n ";
 		for (int i = 0; i < this->rows(); i++) cout << i << ' ';
@@ -234,4 +234,7 @@ void BattleBoard::debug_print_board()
 			cout << endl;
 		}
 	}
+	 *
+	 */
+	
 }

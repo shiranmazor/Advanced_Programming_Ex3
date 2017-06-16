@@ -266,7 +266,8 @@ void BattleshipGameAlgo::_placeShips(vector<vector<vector<int>>>& scoreBoard) co
 
 void debug_print_board(PlayerBoard b)
 {
-	for (int z = 0; z < b.depth; z++)
+	/*
+	 *for (int z = 0; z < b.depth; z++)
 	{
 		cout << "\ndepth " << z << "\n\n ";
 		for (int i = 0; i < b.rows; i++) cout << i << ' ';
@@ -279,6 +280,8 @@ void debug_print_board(PlayerBoard b)
 			cout << endl;
 		}
 	}
+	 */
+	
 }
 
 Coordinate BattleshipGameAlgo::_getBestGuess()
@@ -571,7 +574,8 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 			_markIrrelevant(depth, row - 1, col + 1);
 			_markIrrelevant(depth, row - 1, col - 1);
 
-			this->playerBoard.hostileShips[tolower(getShipBySize(this->target->hitCount + 1))]--;
+			if (this->target != nullptr) this->playerBoard.hostileShips[tolower(getShipBySize(this->target->hitCount + 1))]--;
+			else this->playerBoard.hostileShips[tolower(getShipBySize(1))]--;
 
 			delete this->target;
 			this->target = nullptr; // back to search mode
