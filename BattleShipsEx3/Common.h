@@ -35,5 +35,3 @@ Coordinate fitCoordinate(Coordinate coor);
 int Factorial(int n);
 vector<pair<int, int>> PairesPermGenerator(int n);
 
-IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
-	IBattleshipGameAlgo* pB, int currentName);

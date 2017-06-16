@@ -73,11 +73,6 @@ Coordinate fitCoordinate(Coordinate coor)
 	return Coordinate(coor.row - 1, coor.col - 1, coor.depth - 1);
 }
 
-IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
-	IBattleshipGameAlgo* pB, int currentName)
-{
-	return currentName == A ? pB : pA;
-}
 
 bool dirExists(const std::string& dirName_in)
 {
