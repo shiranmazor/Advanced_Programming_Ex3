@@ -69,5 +69,5 @@ private:
 	bool _canAttack(int z, int i, int j, vector<vector<vector<char>>>& board) const;
 	Coordinate _getBestGuess();
 	bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard, int d) const;
-	void BattleshipGameAlgo::_placeShipsDumb(vector<vector<vector<int>>>& scoreBoard) const;
+	void BattleshipGameAlgo::_placeShips(vector<vector<vector<int>>>& scoreBoard) const;
 };

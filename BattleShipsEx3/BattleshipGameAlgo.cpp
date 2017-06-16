@@ -68,7 +68,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 		}
 		remainingShips += shipCounter.second;
 	}
-	//if (remainingShips > 1) cout << "_placeNextShip run, for ship '" << ship << "', remaining ships " << remainingShips << " DEPTH - " << d << endl;
+	cout << "_placeNextShip run, for ship '" << ship << "', remaining ships " << remainingShips << " DEPTH - " << d << " PLAYER " << this->playerNum << endl;
 	// Return in case we ran out of ships to place
 	if (ship == irrelevnatCell) return true;
 
@@ -111,7 +111,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 						}
 					
 						// call again with reduced hostile ships counter
-						if (remainingShips > 2) cout << z << ", " << i << ", " << j << " - Z align:";
+						cout << z << ", " << i << ", " << j << " - Z align:";
 						resultZ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard, d + 1);
 
 						for (int l = 0; l < getShipSize(ship); l++)
@@ -152,7 +152,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 						}
 
 						// call again with reduced hostile ships counter
-						if (remainingShips > 2) cout << z << ", " << i << ", " << j << " - I align:";
+						cout << z << ", " << i << ", " << j << " - I align:";
 						resultI = _placeNextShip(nextHostileShips, tempBoard, scoreBoard, d + 1);
 
 						for (int l = 0; l < getShipSize(ship); l++)
@@ -192,7 +192,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 						}
 
 						// call again with reduced hostile ships counter
-						if (remainingShips > 2) cout << z << ", " << i << ", " << j << " - J align:";
+						cout << z << ", " << i << ", " << j << " - J align:";
 						resultJ = _placeNextShip(nextHostileShips, tempBoard, scoreBoard, d + 1);
 
 						for (int l = 0; l < getShipSize(ship); l++)
@@ -221,7 +221,7 @@ bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, v
 	return allShipsPlaced;
 }
 
-void BattleshipGameAlgo::_placeShipsDumb(vector<vector<vector<int>>>& scoreBoard) const
+void BattleshipGameAlgo::_placeShips(vector<vector<vector<int>>>& scoreBoard) const
 {
 	bool goodZ, goodI, goodJ;
 	char ship = irrelevnatCell;
@@ -264,6 +264,23 @@ void BattleshipGameAlgo::_placeShipsDumb(vector<vector<vector<int>>>& scoreBoard
 	}
 }
 
+void debug_print_board(PlayerBoard b)
+{
+	for (int z = 0; z < b.depth; z++)
+	{
+		cout << "\ndepth " << z << "\n\n ";
+		for (int i = 0; i < b.rows; i++) cout << i << ' ';
+		cout << endl;
+		for (int i = 0; i < b.rows; i++)
+		{
+			cout << i;
+			for (int j = 0; j < b.cols; j++)
+				cout << b.board[z][i][j] << "|";
+			cout << endl;
+		}
+	}
+}
+
 Coordinate BattleshipGameAlgo::_getBestGuess()
 {
 	vector<vector<vector<int>>> scoreBoard(this->playerBoard.depth, vector<vector<int>>(this->playerBoard.rows, vector<int>(this->playerBoard.cols)));
@@ -286,8 +303,9 @@ Coordinate BattleshipGameAlgo::_getBestGuess()
 	// could be placed there (and how much points those ships are worth). 
 	// Positioning ships under to the assumption that the opponent has the exact same ships as this player.
 	// In case of of too many options, use a simpler algorithm - place each remaining ships by itself, and not all of them together.
-	if (pow(relevantCells, remainingShips) <= 50000) _placeNextShip(this->playerBoard.hostileShips, this->playerBoard.board, scoreBoard, 0);
-	else _placeShipsDumb(scoreBoard);
+	//if (pow(relevantCells, remainingShips) <= 50000) _placeNextShip(this->playerBoard.hostileShips, this->playerBoard.board, scoreBoard, 0);
+	//else _placeShips(scoreBoard);
+	_placeShips(scoreBoard);
 
 	// Find highest scored cell
 	for (int z = 0; z < this->playerBoard.depth; z++)
@@ -307,7 +325,7 @@ Coordinate BattleshipGameAlgo::_getBestGuess()
 
 	// safety
 	if (_canAttack(bestCell.depth - 1, bestCell.row - 1, bestCell.col - 1)) return bestCell;
-
+	debug_print_board(this->playerBoard);
 	// No more available moves
 	return Coordinate(-1, -1, -1);
 }
@@ -535,8 +553,8 @@ void BattleshipGameAlgo::notifyOnAttackResult(int player, Coordinate move, Attac
 					_markIrrelevant(depth, row - 1, col - 1);
 				}
 
-				this->target->hitCount++;
 			}
+			this->target->hitCount++;
 			break;
 		case AttackResult::Sink:
 			// mark surrounding cells as irrelevant (last hit, can add all directions)
