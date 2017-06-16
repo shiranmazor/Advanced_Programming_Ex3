@@ -201,14 +201,14 @@ void ReportResults()
 			cout << "Current Round " << current_round << endl;
 			//print game counter
 			g_gameCounter_mutex.lock();
-			g_playerScore_mutex.lock();
+			
 			std::cout << endl;
 			std::cout << "---- Games Played until now (these results): " << g_gamesCounter << "/" << g_total_games_size << endl;
 			std::cout << endl;
 			//create vector<string,playerRoundScore>
 			vector<pair<string, PlayerRoundScore>> currentScores;
 			//create middle results object for all players
-			
+			g_playerScore_mutex.lock();
 			for(auto ps: g_pScores)
 			{
 				currentScores.push_back(make_pair(ps.playerName, ps.rounds[current_round - 1]));
@@ -331,9 +331,11 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 		if (currentGame.gameNumber == -1)
 			return;
 		//build new game objects
-		
+		g_playersAlgo_mutex.lock();
 		pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
 		pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
+		g_playersAlgo_mutex.unlock();
+
 
 		GameResult result = playSingleGame(playerA, playerB, boards, currentGame.boardNumber);
 		//update players scores with updateGameResult
