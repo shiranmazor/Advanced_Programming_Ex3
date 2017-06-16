@@ -294,11 +294,10 @@ void  calcGameCombinations(int playersNum, int boardsNumber)
 Game getCurrentGame()
 {
 	Game g(-1, -1, -1, -1);
-	
+	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
 	if (g_games.empty())
 		return g;
 
-	lock_guard<std::mutex> lock(g_gamesQueue_mutex);
 	Game currGame = g_games.front();
 	g_games.pop();
 	return currGame;	
@@ -312,6 +311,7 @@ void IncreaseGameCounter()
 
 bool isTournamentDone()
 {
+	lock_guard<std::mutex> lock(g_gameCounter_mutex);
 	return g_gamesCounter == g_total_games_size;
 }
 
@@ -350,6 +350,8 @@ void updateGameResult(GameResult result)
 	int i = 0; 
 	int playerBIndex = 0; 
 	int playerAIndex = 0;
+	//let's update scores
+	lock_guard<std::mutex> lock(g_playerScore_mutex);
 	while (i < g_pScores.size())
 	{
 		if (g_pScores[i].playerName == result.playerA)
@@ -358,8 +360,7 @@ void updateGameResult(GameResult result)
 			playerBIndex = i;
 		i++;
 	}
-	//let's update scores
-	lock_guard<std::mutex> lock(g_playerScore_mutex);
+	
 	//A:
 	g_pScores[playerAIndex].UpdateScore(result.winPlayer == 0, result.playerAScore, result.playerBScore, result.winPlayer == -1);
 	//B:
