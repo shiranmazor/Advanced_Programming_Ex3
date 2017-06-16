@@ -67,23 +67,26 @@ struct sortPlayersScoreByWinRate
 * one sboard file and 2 dll files
 * if not return false
 */
-bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path, vector<string>& error_messages);
+bool CheckExistingGameFiles(vector<string> dllFiles, vector<string> sboardFiles, string path,
+	vector<string>& error_messages);
 void closeDLLs(vector<tuple<string, HINSTANCE, GetAlgorithmFuncType>> & dll_vec);
-void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles, vector<string>& dllNames);
+void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & dllFiles,
+	vector<string>& dllNames);
 
 /*
 load algorithms and board file for one game
 */
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
-	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards);
+	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs,
+	vector<shared_ptr<BattleBoard>>& boards);
 void  calcGameCombinations(int playersNum, int boardsNumber);
 
-IBattleshipGameAlgo* swapPlayer(IBattleshipGameAlgo* current, IBattleshipGameAlgo* pA,
-	IBattleshipGameAlgo* pB, int currentName);
+GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, 
+	pair<GetAlgorithmFuncType, string> playerBPair,
+	vector<shared_ptr<BattleBoard>> const boards, int curentBoardNum);
 
-GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
-	shared_ptr<BattleBoard> board);
 int manageGames(vector<string> dllFiles, vector<string> dllNames, vector<string> sboardFiles, int threads);
+
 void GameThread(vector<shared_ptr<BattleBoard>> boards);
 void updateGameResult(GameResult result);
 bool isTournamentDone();

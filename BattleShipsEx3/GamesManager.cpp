@@ -93,7 +93,8 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 }
 
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
-	 vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, vector<shared_ptr<BattleBoard>>& boards)
+	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, 
+	vector<shared_ptr<BattleBoard>>& boards)
 {
 	vector<string>  errors;
 	vector<string>  boardErrors;
@@ -330,14 +331,11 @@ void GameThread(vector<shared_ptr<BattleBoard>> boards)
 		if (currentGame.gameNumber == -1)
 			return;
 		//build new game objects
-		//create game board using copy constructor!! - copy the boards!
-		shared_ptr<BattleBoard> gameBoard(boards[currentGame.boardNumber - 1]);
-		g_playersAlgo_mutex.lock();
+		
 		pair<GetAlgorithmFuncType, string> playerA = g_playersAlgo.at(currentGame.playerANumber);
 		pair<GetAlgorithmFuncType, string> playerB = g_playersAlgo.at(currentGame.playerBNumber);
-		g_playersAlgo_mutex.unlock();
 
-		GameResult result = playSingleGame(playerA, playerB, gameBoard);
+		GameResult result = playSingleGame(playerA, playerB, boards, currentGame.boardNumber);
 		//update players scores with updateGameResult
 		updateGameResult(result);
 		IncreaseGameCounter();
@@ -370,21 +368,19 @@ void updateGameResult(GameResult result)
 }
 
 
-
-
 GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
-	shared_ptr<BattleBoard> board)
+	vector<shared_ptr<BattleBoard>> const boards, int curentBoardNum)
 {
 	//create players instance
 	unique_ptr<IBattleshipGameAlgo> playerA(playerAPair.first());
 	unique_ptr<IBattleshipGameAlgo> playerB(playerBPair.first());
+	BattleBoard board(*(boards[curentBoardNum - 1].get()));
 	
-
 	playerA->setPlayer(A);
 	playerB->setPlayer(B);
 	
-	playerA->setBoard(board->getPlayerBoard(A));
-	playerB->setBoard(board->getPlayerBoard(B));
+	playerA->setBoard(board.getPlayerBoard(A));
+	playerB->setBoard(board.getPlayerBoard(B));
 
 	//we starts with player A
 	Coordinate attackMove(1, 1, 1);
@@ -426,12 +422,12 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 			continue;
 		}
 
-		AttackResult moveRes = board->performGameMove(currentPlayer, attackMove);
+		AttackResult moveRes = board.performGameMove(currentPlayer, attackMove);
 		//notify both players on the moveAttak results
 		playerA->notifyOnAttackResult(currentPlayer, attackMove, moveRes);
 		playerB->notifyOnAttackResult(currentPlayer, attackMove, moveRes);
 		//check victory:
-		winPlayer = board->CheckVictory();
+		winPlayer = board.CheckVictory();
 		if (winPlayer == A || winPlayer == B)
 		{
 			victory = true;
@@ -439,14 +435,13 @@ GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<G
 		}
 
 		// if Miss or self hit next turn is of the other player. in case there are 2  players
-		if (moveRes == AttackResult::Miss || (moveRes != AttackResult::Miss &&
-			isSelfHit(currentPlayer, board->charAt(attackMove)) && !onePlayerGame)
+		if (moveRes == AttackResult::Miss || (isSelfHit(currentPlayer, board.charAt(attackMove)) && !onePlayerGame)
 		{
 			currentPlayer = currentPlayer == A ? B : A;//swap
 		}
 	}
 	//outside game loop
-	pair<int, int> gameScore = board->CalcScore();
+	pair<int, int> gameScore = board.CalcScore();
 
 	GameResult result(playerAPair.second, playerBPair.second);
 	result.winPlayer = winPlayer;
