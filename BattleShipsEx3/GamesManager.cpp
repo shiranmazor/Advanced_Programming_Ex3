@@ -94,7 +94,7 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
 	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, 
-	vector<shared_ptr<BattleBoard>>& boards)
+	vector<unique_ptr<BattleBoard>>& boards)
 {
 	vector<string>  errors;
 	vector<string>  boardErrors;
@@ -118,9 +118,9 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	//load files, create battleBoard instance and check validity
 	for(auto boardF: sboardfiles)
 	{
-		shared_ptr<BattleBoard> board = make_shared<BattleBoard>(boardF);
+		unique_ptr<BattleBoard> board = make_unique<BattleBoard>(boardF);
 		if (board->isBoardValid(boardErrors))
-			boards.push_back(board);
+			boards.push_back(std::move(board));
 	}
 	if (boards.size() == 0)
 		errors.push_back("Error: all sboard files are Invalid. no board! exising.");
@@ -141,7 +141,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	vector<HINSTANCE> dllLoaded;
 	//load dll's
 	vector<GetAlgorithmFuncType> algorithmFuncs;
-	vector<shared_ptr<BattleBoard>> boards;
+	vector<unique_ptr<BattleBoard>> boards;
 	g_gamesCounter = 0;
 
 	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
@@ -320,7 +320,7 @@ bool isTournamentDone()
  * update gameResults
  * 
  */
-void GameThread(vector<shared_ptr<BattleBoard>> boards)
+void GameThread(vector<unique_ptr<BattleBoard>>& boards)
 {
 	//get unique next current Game obj from queue
 	while(!isTournamentDone())
@@ -372,7 +372,7 @@ void updateGameResult(GameResult result)
 
 
 GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
-	vector<shared_ptr<BattleBoard>> const boards, int curentBoardNum)
+	vector<unique_ptr<BattleBoard>>& boards, int curentBoardNum)
 {
 	//create players instance
 	unique_ptr<IBattleshipGameAlgo> playerA(playerAPair.first());
