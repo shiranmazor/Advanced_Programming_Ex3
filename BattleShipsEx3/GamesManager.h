@@ -78,17 +78,15 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 load algorithms and board file for one game
 */
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
-	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs,
-	vector<shared_ptr<BattleBoard>>& boards);
+	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs);
 void  calcGameCombinations(int playersNum, int boardsNumber);
 
 GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, 
-	pair<GetAlgorithmFuncType, string> playerBPair,
-	vector<shared_ptr<BattleBoard>>& boards, int curentBoardNum);
+	pair<GetAlgorithmFuncType, string> playerBPair ,int curentBoardNum);
 
 int manageGames(vector<string> dllFiles, vector<string> dllNames, vector<string> sboardFiles, int threads);
 
-void GameThread(vector<shared_ptr<BattleBoard>>& boards);
+void GameThread();
 void updateGameResult(GameResult result);
 bool isTournamentDone();
 void IncreaseGameCounter();

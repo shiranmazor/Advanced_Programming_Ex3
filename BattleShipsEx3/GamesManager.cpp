@@ -10,6 +10,7 @@
 queue<Game> g_games;
 map<int, pair<GetAlgorithmFuncType, string>> g_playersAlgo;
 vector<PlayerScore> g_pScores;
+vector<unique_ptr<BattleBoard>> g_boards;
 int g_gamesCounter;
 int g_total_games_size;
 int g_each_player_games_num;
@@ -93,8 +94,7 @@ void getGameFiles(string folder, vector<string> & sboardFiles, vector<string> & 
 }
 
 bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles,
-	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs, 
-	vector<shared_ptr<BattleBoard>>& boards)
+	vector<HINSTANCE>& dllLoaded, vector<GetAlgorithmFuncType>& algorithmFuncs)
 {
 	vector<string>  errors;
 	vector<string>  boardErrors;
@@ -118,11 +118,12 @@ bool loadAlgoDllsCheckBoards(vector<string> dllfiles, vector<string> sboardfiles
 	//load files, create battleBoard instance and check validity
 	for(auto boardF: sboardfiles)
 	{
-		shared_ptr<BattleBoard> board = make_shared<BattleBoard>(boardF);
+		unique_ptr<BattleBoard> board = make_unique<BattleBoard>(boardF);
 		if (board->isBoardValid(boardErrors))
-			boards.push_back(board);
+			g_boards.push_back(move(board));
+		
 	}
-	if (boards.size() == 0)
+	if (g_boards.size() == 0)
 		errors.push_back("Error: all sboard files are Invalid. no board! exising.");
 
 	if (errors.size() > 0)
@@ -141,15 +142,14 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	vector<HINSTANCE> dllLoaded;
 	//load dll's
 	vector<GetAlgorithmFuncType> algorithmFuncs;
-	vector<shared_ptr<BattleBoard>> boards;
 	g_gamesCounter = 0;
 
-	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs, boards))
+	if (!loadAlgoDllsCheckBoards(dllFiles, sboardFiles, dllLoaded, algorithmFuncs))
 		return -1;
 
 	//print number of legal players and number of legal boards
 	cout << "Number of legal players: " << algorithmFuncs.size() << endl;
-	cout << "Number of legal boards: " << boards.size()  << endl;
+	cout << "Number of legal boards: " << g_boards.size()  << endl;
 
 	//first create a map of player unique number to algo name
 	int i = 0;
@@ -163,7 +163,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	}
 	
 	//create game combinations  in g_Games queue
-	calcGameCombinations(int(g_playersAlgo.size()), int(boards.size()));
+	calcGameCombinations(int(g_playersAlgo.size()), int(g_boards.size()));
 
 	//adjust threads number to the number of games
 	if (g_games.size() < threadsNum)
@@ -173,7 +173,7 @@ int manageGames(vector<string> dllFiles,vector<string> dllNames, vector<string> 
 	for (auto& thread_ptr : threads)
 	{
 		//create the threads and run them
-		thread_ptr = make_unique<thread>(GameThread, boards); // create and run the thread
+		thread_ptr = make_unique<thread>(GameThread); // create and run the thread
 	}
 	//here call function that print the mid results for each round
 	ReportResults();
@@ -316,7 +316,7 @@ bool isTournamentDone()
  * update gameResults
  * 
  */
-void GameThread(vector<shared_ptr<BattleBoard>>& boards)
+void GameThread()
 {
 	//get unique next current Game obj from queue
 	while(!isTournamentDone())
@@ -333,7 +333,7 @@ void GameThread(vector<shared_ptr<BattleBoard>>& boards)
 		g_playersAlgo_mutex.unlock();
 
 
-		GameResult result = playSingleGame(playerA, playerB, boards, currentGame.boardNumber);
+		GameResult result = playSingleGame(playerA, playerB, currentGame.boardNumber);
 		//update players scores with updateGameResult
 		updateGameResult(result);
 		IncreaseGameCounter();
@@ -367,13 +367,13 @@ void updateGameResult(GameResult result)
 }
 
 
-GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, pair<GetAlgorithmFuncType, string> playerBPair,
-	vector<shared_ptr<BattleBoard>>& boards, int curentBoardNum)
+GameResult playSingleGame(pair<GetAlgorithmFuncType, string> playerAPair, 
+	pair<GetAlgorithmFuncType, string> playerBPair, int curentBoardNum)
 {
 	//create players instance
 	unique_ptr<IBattleshipGameAlgo> playerA(playerAPair.first());
 	unique_ptr<IBattleshipGameAlgo> playerB(playerBPair.first());
-	BattleBoard board(*(boards[curentBoardNum - 1].get()));
+	BattleBoard board(*(g_boards[curentBoardNum - 1].get()));
 	
 	playerA->setPlayer(A);
 	playerB->setPlayer(B);
