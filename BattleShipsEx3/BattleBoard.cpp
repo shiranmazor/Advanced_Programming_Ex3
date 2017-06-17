@@ -136,27 +136,6 @@ pair<int, int> BattleBoard::CalcScore()
 
 int BattleBoard::CheckVictory()
 {
-	//int winner(-1);
-	//int countA(0), countB(0), sinkA(0), sinkB(0);
-	//set<shared_ptr<Vessel>> seenVessels;
-
-	//for (auto const& element : this->ships)
-	//	if (seenVessels.find(element.second) == seenVessels.end())
-	//	{
-	//		seenVessels.insert(element.second);
-	//		if (element.second->player == A) countA++;
-	//		else countB++;
-	//		if (element.second->size <= element.second->hitNum)
-	//		{
-	//			if (element.second->player == A) sinkA++;
-	//			else sinkB++;
-	//		}
-	//	}
-
-	//if (countA == sinkA) winner = B;
-	//else if (countB == sinkB) winner = A;
-
-	//return winner;
 	int winner(-1);
 	int countA(0), countB(0);
 
@@ -217,24 +196,4 @@ AttackResult BattleBoard::performGameMove(int p, Coordinate move)
 		return (this->ships[makeKey(move)]->hitNum == this->ships[makeKey(move)]->size) ? AttackResult::Sink : AttackResult::Hit;
 	}
 	return AttackResult::Miss;
-}
-
-void BattleBoard::debug_print_board()
-{
-	/*for (int z = 0; z < this->depth(); z++)
-	{
-		cout << "\ndepth " << z << "\n\n ";
-		for (int i = 0; i < this->rows(); i++) cout << i << ' ';
-		cout << endl;
-		for (int i = 0; i < this->rows(); i++)
-		{
-			cout << i;
-			for (int j = 0; j < this->cols(); j++)
-				cout << this->board[z][i][j] << "|";
-			cout << endl;
-		}
-	}
-	 *
-	 */
-	
 }

@@ -15,6 +15,7 @@ const char shipsBySize[4] = { 'd', 'm', 'p', 'b' };
 class targetVessel
 {
 public:
+	bool exists = false;
 	int direction = -1;
 	/*0 - no direction(ship size 1)
 	* 1 - going right
@@ -40,7 +41,7 @@ class BattleshipGameAlgo : public IBattleshipGameAlgo
 public:
 	int playerNum;
 	PlayerBoard playerBoard;
-	targetVessel* target = nullptr;
+	targetVessel target;
 	
 	// Blocking Copy and Assignment
 	BattleshipGameAlgo(const BattleshipGameAlgo&) = delete;
@@ -53,8 +54,6 @@ public:
 
 	~BattleshipGameAlgo()
 	{
-		//delete playerBoard;
-		delete target;
 	}
 
 	virtual void setPlayer(int player) override;
@@ -64,10 +63,7 @@ public:
 
 private:
 	void _markIrrelevant(int depth, int row, int col);
-	void _markCell(int depth, int row, int col, vector<vector<vector<char>>>& board, char mark) const;
 	bool _canAttack(int z, int i, int j) const;
-	bool _canAttack(int z, int i, int j, vector<vector<vector<char>>>& board) const;
 	Coordinate _getBestGuess();
-	bool BattleshipGameAlgo::_placeNextShip(unordered_map<char, int> hostileShips, vector<vector<vector<char>>>& board, vector<vector<vector<int>>>& scoreBoard, int d) const;
 	void BattleshipGameAlgo::_placeShips(vector<vector<vector<int>>>& scoreBoard) const;
 };

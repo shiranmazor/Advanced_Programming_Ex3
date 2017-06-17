@@ -137,5 +137,4 @@ public:
 
 private:
 	void _collect_ship(int z, int i, int j, set<tuple<int, int, int>>* s);
-	void debug_print_board();
 };
