@@ -130,7 +130,6 @@ pair<int, int> BattleBoard::CalcScore()
 			else
 				scores.second += getShipScore(element.second->type);
 		}
-	debug_print_board();
 	return scores;
 }
 
